@@ -2,6 +2,8 @@
 **ioarena** - embedded storage benchmarking
 -------------------------------------------
 
+<img src="https://travis-ci.org/pmwkaa/ioarena.svg?branch=master" />
+
 **ioarena** is an utility designed for evaluating performance
 of embedded databases.
 

@@ -1,0 +1,12 @@
+language: c
+compiler:
+  - clang
+  - gcc
+branches:
+  only:
+    - master
+script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
