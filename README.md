@@ -9,7 +9,7 @@ The goal of this project is to provide a standart and simple
 in use instrument for benchmarking, so any database developer or user
 can reference to or repeat obtained results.
 
-Benchmarking methods: **set**, **get**, **iterate**, **batch**, **transaction**
+Benchmarking methods: *set*, *get*, *iterate*, *batch*, *transaction*
 
 Supported databases: **rocksdb**, **leveldb**, **forestdb**, **lmdb**,
 **wiredtiger**, **sophia**
@@ -43,8 +43,14 @@ usage: ioarena [hDBCpnkv]
 build
 -----
 
-**cmake** is required for building. To enable a specific database driver,
-pass -DENABLE\_**NAME**=ON to cmake:
+```sh
+git clone --recursive https://github.com/pmwkaa/ioarena
+```
+
+**cmake** is required for building.
+
+To enable a specific database driver, pass -DENABLE\_**NAME**=ON to cmake.
+If a specified database is not installed in system, it will be build from db/*name* directory.
 
 ```sh
 mkdir build

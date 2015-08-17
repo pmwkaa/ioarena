@@ -1,0 +1,18 @@
+[submodule "db/rocksdb"]
+	path = db/rocksdb
+	url = https://github.com/facebook/rocksdb
+[submodule "db/leveldb"]
+	path = db/leveldb
+	url = https://github.com/google/leveldb
+[submodule "db/forestdb"]
+	path = db/forestdb
+	url = https://github.com/couchbase/forestdb
+[submodule "db/wiredtiger"]
+	path = db/wiredtiger
+	url = https://github.com/wiredtiger/wiredtiger
+[submodule "db/lmdb"]
+	path = db/lmdb
+	url = https://github.com/lmdb/lmdb
+[submodule "db/sophia"]
+	path = db/sophia
+	url = https://github.com/pmwkaa/sophia
