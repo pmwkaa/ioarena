@@ -1,6 +1,6 @@
 N	?= 10000
 EXE	?= @BUILD/src/ioarena
-DATA	?= @DATA.DB
+DATA	?= /sandbox/test/@DATA.ioarena
 CSV	?= @DATA.CSV
 ENGINES	?= lmdb sophia forestdb leveldb rocksdb wiredtiger
 LOGOUT	?= >>
