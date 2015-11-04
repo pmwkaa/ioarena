@@ -16,3 +16,6 @@
 [submodule "db/sophia"]
 	path = db/sophia
 	url = https://github.com/pmwkaa/sophia
+[submodule "db/nessdb"]
+	path = db/nessdb
+	url = https://github.com/BohuTANG/nessDB.git

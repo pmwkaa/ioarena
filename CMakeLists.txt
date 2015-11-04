@@ -93,6 +93,21 @@ if (ENABLE_FORESTDB)
 	include_directories(${FORESTDB_INCLUDE_DIRS})
 endif(ENABLE_FORESTDB)
 
+# nessDB
+option(ENABLE_NESSDB "Enable nessDB" OFF)
+if (ENABLE_NESSDB)
+	find_package(nessDB QUIET)
+	if (NOT NESSDB_FOUND)
+		include(BuildNessDB)
+		build_nessdb()
+	endif (NOT NESSDB_FOUND)
+	set(HAVE_NESSDB 1)
+	set(ia_libraries ${ia_libraries} ${NESSDB_LIBRARIES})
+	include_directories(${NESSDB_INCLUDE_DIRS})
+endif(ENABLE_NESSDB)
+
+
+
 message (STATUS "")
 message (STATUS "IOARENA: embedded storage benchmarking.")
 message (STATUS "")
@@ -102,6 +117,7 @@ message (STATUS "ENABLE_SOPHIA:     ${ENABLE_SOPHIA}")
 message (STATUS "ENABLE_WIREDTIGER: ${ENABLE_WIREDTIGER}")
 message (STATUS "ENABLE_FORESTDB:   ${ENABLE_FORESTDB}")
 message (STATUS "ENABLE_LMDB:       ${ENABLE_LMDB}")
+message (STATUS "ENABLE_nessDB:     ${ENABLE_NESSDB}")
 message (STATUS "")
 
 add_subdirectory(src)
