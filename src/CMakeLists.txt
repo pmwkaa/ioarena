@@ -34,6 +34,10 @@ if (HAVE_LMDB)
 	set(ia_src ${ia_src} ia_lmdb.c)
 endif (HAVE_LMDB)
 
+if (HAVE_NESSDB)
+	set(ia_src ${ia_src} ia_nessdb.c)
+endif (HAVE_NESSDB)
+
 add_executable(${ia_binary} ${ia_src})
 add_dependencies(${ia_binary} build_libs)
 

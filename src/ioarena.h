@@ -40,6 +40,7 @@ extern iadriver ia_lmdb;
 extern iadriver ia_forestdb;
 extern iadriver ia_wt;
 extern iadriver ia_sophia;
+extern iadriver ia_nessdb;
 extern ia ioarena;
 
 #endif

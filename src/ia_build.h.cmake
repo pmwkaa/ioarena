@@ -19,6 +19,7 @@
 #cmakedefine HAVE_WIREDTIGER 1
 #cmakedefine HAVE_FORESTDB 1
 #cmakedefine HAVE_LMDB 1
+#cmakedefine HAVE_NESSDB 1
 
 extern iadriver ia_leveldb;
 extern iadriver ia_rocksdb;
@@ -26,6 +27,7 @@ extern iadriver ia_lmdb;
 extern iadriver ia_forestdb;
 extern iadriver ia_wt;
 extern iadriver ia_sophia;
+extern iadriver ia_nessdb;
 
 static inline iadriver*
 ia_of(char *name)
@@ -60,6 +62,11 @@ ia_of(char *name)
 		return &ia_lmdb;
 	}
 #endif
+#ifdef HAVE_NESSDB
+	if (strcasecmp(name, "nessdb") == 0) {
+		return &ia_nessdb;
+	}
+#endif
 	(void)name;
 	return NULL;
 }
@@ -91,6 +98,10 @@ ia_supported(void)
 #endif
 #ifdef HAVE_LMDB
 	len += snprintf(list + len, sizeof(list) - len, "%slmdb",
+	                (len > 0) ? ", ": "");
+#endif
+#ifdef HAVE_NESSDB
+	len += snprintf(list + len, sizeof(list) - len, "%snessdb",
 	                (len > 0) ? ", ": "");
 #endif
 	if (len == 0) {
