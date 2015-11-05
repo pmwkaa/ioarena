@@ -14,7 +14,7 @@ can reference to or repeat obtained results.
 Benchmarking methods: *set*, *get*, *iterate*, *batch*, *transaction*
 
 Supported databases: **rocksdb**, **leveldb**, **forestdb**, **lmdb**,
-**nessDB**, **wiredtiger**, **sophia**
+**nessdb**, **wiredtiger**, **sophia**
 
 *New drivers or any kind of enhancements are very welcome!*
 
