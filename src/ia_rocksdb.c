@@ -2,7 +2,7 @@
 /*
  * ioarena: embedded storage benchmarking
  *
- * Copyright (c) Dmitry Simonenko
+ * Copyright (c) ioarena authors
  * BSD License
 */
 

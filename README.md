@@ -14,7 +14,7 @@ can reference to or repeat obtained results.
 Benchmarking methods: *set*, *get*, *iterate*, *batch*, *transaction*
 
 Supported databases: **rocksdb**, **leveldb**, **forestdb**, **lmdb**,
-**wiredtiger**, **sophia**
+**nessDB**, **wiredtiger**, **sophia**
 
 *New drivers or any kind of enhancements are very welcome!*
 
@@ -27,7 +27,7 @@ IOARENA (embedded storage benchmarking)
 usage: ioarena [hDBCpnkv]
 
   -D <database_driver>
-	   sophia, leveldb, rocksdb, wiredtiger, forestdb, lmdb
+	   sophia, leveldb, rocksdb, wiredtiger, forestdb, lmdb, nessDB
   -B <benchmarks>
 	   set, get, delete, iterate
 	   batch, transaction
@@ -61,3 +61,9 @@ cmake .. -DENABLE_ROCKSDB=ON
 make
 src/ioarena -h
 ```
+
+authors
+-------
+
+Dmitry Simonenko (original author) [@pmwkaa](https://github.com/pmwkaa)
+BohuTANG (nessDB support) [@bohutang](https://github.com/BohuTANG)
