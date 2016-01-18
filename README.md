@@ -24,22 +24,28 @@ Usage
 ```sh
 IOARENA (embedded storage benchmarking)
 
-usage: ioarena [hDBCpnkv]
-
+usage: ioarena [hDBCpnkvmlrwic]
   -D <database_driver>
-	   leveldb, rocksdb, wiredtiger, sophia, forestdb, lmdb, mdbx, nessdb
+      leveldb, rocksdb, wiredtiger, sophia, forestdb,
+	  lmdb, mdbx, nessdb, dummy
   -B <benchmarks>
-	   set, get, delete, iterate
-	   batch, crud
+      set, get, delete, iterate
+      batch, crud
   -C generate csv
-  -p <path>                   (./_ioarena)
-  -n <number_of_operations>   (1000000)
-  -k <key_size>               (16)
-  -v <value_size>             (32)
-  -h
+  -p <path>                    (./_ioarena)
+  -n <number_of_operations>    (1000000)
+  -k <key_size>                (16)
+  -v <value_size>              (32)
+  -m <sync_mode>               (lazy)
+  -l <wal_mode>                (indef)
+  -r <number_of_read_threads>  (0)
+  -w <number_of_crud_threads>  (0)
+  -i ignore key-not-found
+  -c continuous completing
+  -h                           help
 
   example:
-	 ioarena -D rocksdb -T set,get -n 100000000
+     ioarena -D rocksdb -T set,get -n 100000000
 ```
 
 Build
