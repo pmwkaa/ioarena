@@ -14,11 +14,11 @@ can reference to or repeat obtained results.
 Benchmarking methods: *set*, *get*, *iterate*, *batch*, *transaction*
 
 Supported databases: **rocksdb**, **leveldb**, **forestdb**, **lmdb**,
-**nessdb**, **wiredtiger**, **sophia**
+**mdbx (modified lmdb), **nessdb**, **wiredtiger**, **sophia**
 
 *New drivers or any kind of enhancements are very welcome!*
 
-usage
+Usage
 -----
 
 ```sh
@@ -27,11 +27,11 @@ IOARENA (embedded storage benchmarking)
 usage: ioarena [hDBCpnkv]
 
   -D <database_driver>
-	   sophia, leveldb, rocksdb, wiredtiger, forestdb, lmdb, nessDB
+	   leveldb, rocksdb, wiredtiger, sophia, forestdb, lmdb, mdbx, nessdb
   -B <benchmarks>
 	   set, get, delete, iterate
-	   batch, transaction
-  -C generate csv                 
+	   batch, crud
+  -C generate csv
   -p <path>                   (./_ioarena)
   -n <number_of_operations>   (1000000)
   -k <key_size>               (16)
@@ -42,7 +42,7 @@ usage: ioarena [hDBCpnkv]
 	 ioarena -D rocksdb -T set,get -n 100000000
 ```
 
-build
+Build
 -----
 
 ```sh
@@ -62,9 +62,11 @@ make
 src/ioarena -h
 ```
 
-authors
+Authors
 -------
 
-Dmitry Simonenko (original author) [@pmwkaa](https://github.com/pmwkaa)
-
-BohuTANG (nessDB support) [@bohutang](https://github.com/BohuTANG)
+| |  |
+|---|---|
+| Dmitry Simonenko @pmwkaa) | Original author |
+| Leonid Yuriev @leo-yuriev | Multithreading and isolation from the testcases the interface of a DB drivers cardinally redesigned, it is clear and intelligible now. |
+| Bohu Tang @@bohutang | Added support for NessDB. |

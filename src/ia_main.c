@@ -17,6 +17,8 @@ main(int argc, char *argv[])
 	int rc = ia_init(&ioarena, argc, argv);
 	if (rc < 0 || rc)
 		goto done;
+	sync();
+	ia_global_init();
 	rc = ia_run(&ioarena);
 done:
 	ia_free(&ioarena);

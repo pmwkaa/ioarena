@@ -4,4 +4,6 @@ Makefile
 cmake_install.cmake
 src/ia_build.h
 src/ioarena
+src/_ioarena
 src/ness.event
+@*

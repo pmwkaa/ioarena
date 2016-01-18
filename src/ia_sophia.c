@@ -9,10 +9,16 @@
 #include <ioarena.h>
 #include <sophia.h>
 
-typedef struct {
+struct iaprivate {
 	void *env;
 	void *db;
-} iasophia;
+};
+
+struct iacontext {
+	void *cursor;
+	void *entry;
+	void *txn;
+};
 
 static void
 ia_sophia_on_recover(char *trace, void *arg)
@@ -21,280 +27,295 @@ ia_sophia_on_recover(char *trace, void *arg)
 	(void)arg;
 }
 
-static int ia_sophia_open(void)
+static int ia_sophia_open(const char *datadir)
 {
-	iadriver *self = ioarena.driver;
-	self->priv = malloc(sizeof(iasophia));
-	if (self->priv == NULL)
+	char *error;
+	iadriver *drv = ioarena.driver;
+	drv->priv = calloc(1, sizeof(iaprivate));
+	if (drv->priv == NULL)
 		return -1;
-	mkdir(ioarena.conf.path, 0755);
-	char path[1024];
-	snprintf(path, sizeof(path), "%s/%s",
-	         ioarena.conf.path, self->name);
-	iasophia *s = self->priv;
-	s->env = sp_env();
-	if (s->env == NULL)
-		return -1;
-	sp_setstring(s->env, "sophia.path", path, 0);
-	sp_setstring(s->env, "scheduler.on_recover",
-	             (void*)(uintptr_t)ia_sophia_on_recover, 0);
-	sp_setstring(s->env, "db", "test", 0);
-	sp_setint(s->env, "db.test.mmap", 1);
-	int rc = sp_open(s->env);
-	if (rc == -1) {
-		char *e = sp_getstring(s->env, "sophia.error", 0);
-		ia_log("error: %s", e);
-		free(e);
-		return -1;
-	}
-	s->db = sp_getobject(s->env, "db.test");
-	assert(s->db != NULL);
 
-	void *cur = sp_getobject(s->env, NULL);
-	void *o = NULL;
-	while ((o = sp_get(cur, o))) {
-		char *key = sp_getstring(o, "key", 0);
-		char *value = sp_getstring(o, "value", 0);
-		ia_log("%s = %s", key, (value) ? value : "");
+	iaprivate *self = drv->priv;
+	self->env = sp_env();
+	if (self->env == NULL)
+		return -1;
+	sp_setstring(self->env, "sophia.path", datadir, 0);
+	sp_setstring(self->env, "scheduler.on_recover",
+	             (void*)(uintptr_t)ia_sophia_on_recover, 0);
+	sp_setstring(self->env, "db", "test", 0);
+	sp_setint(self->env, "db.test.mmap", 1);
+
+	/* LY: suggestions are welcome */
+	switch(ioarena.conf.syncmode) {
+	case IA_SYNC:
+		sp_setint(self->env, "log.sync", 1);
+		sp_setint(self->env, "db.test.sync", 1);
+		break;
+	case IA_LAZY:
+		sp_setint(self->env, "log.sync", 0);
+		sp_setint(self->env, "log.rotate_sync", 0);
+		sp_setint(self->env, "db.test.sync", 1);
+	case IA_NOSYNC:
+		sp_setint(self->env, "log.sync", 0);
+		sp_setint(self->env, "log.rotate_sync", 0);
+		sp_setint(self->env, "db.test.sync", 0);
+		break;
+	default:
+		ia_log("error: %s(): unsupported syncmode %s",
+			__FUNCTION__, ia_syncmode2str(ioarena.conf.syncmode));
+		return -1;
 	}
-	ia_log("");
+
+	switch(ioarena.conf.walmode) {
+	case IA_WAL_INDEF:
+		break;
+	case IA_WAL_ON:
+		sp_setint(self->env, "log.enabled", 1);
+		break;
+	case IA_WAL_OFF:
+		sp_setint(self->env, "log.enabled", 0);
+		break;
+	default:
+		ia_log("error: %s(): unsupported walmode %s",
+			__FUNCTION__, ia_walmode2str(ioarena.conf.walmode));
+		return -1;
+	}
+
+	int rc = sp_open(self->env);
+	if (rc == -1)
+		goto bailout;
+
+	self->db = sp_getobject(self->env, "db.test");
+	assert(self->db != NULL);
+
 	return 0;
+
+bailout:
+	error = sp_getstring(self->env, "sophia.error", 0);
+	ia_log("error: %s, %s (%d)", __FUNCTION__,
+		error, sp_getint(self->env, "sophia.error"));
+	free(error);
+	return -1;
 }
 
 static int ia_sophia_close(void)
 {
-	iadriver *self = ioarena.driver;
-	if (self->priv == NULL)
-		return 0;
-	iasophia *s = self->priv;
 	int rc = 0;
-	if (s->env)
-		rc = sp_destroy(s->env);
-	free(s);
+	iaprivate *self = ioarena.driver->priv;
+	if (self) {
+		ioarena.driver->priv = NULL;
+		if (self->env)
+			rc = sp_destroy(self->env);
+		free(self);
+	}
 	return rc;
 }
 
-static inline int
-ia_sophia_set(void)
+static iacontext* ia_sophia_thread_new(void)
 {
-	iadriver *self = ioarena.driver;
-	iasophia *s = self->priv;
-	uint64_t i = 0;
-	while (i < ioarena.conf.count)
-	{
-		ia_kv(&ioarena.kv);
-		double t0 = ia_histogram_time();
-		void *o = sp_object(s->db);
-		sp_setstring(o, "key",   ioarena.kv.k, ioarena.kv.ksize);
-		sp_setstring(o, "value", ioarena.kv.v, ioarena.kv.vsize);
-		int rc = sp_set(s->db, o);
-		if (rc == -1) {
-			char *e = sp_getstring(s->env, "sophia.error", 0);
-			ia_log("error: %s", e);
-			free(e);
-			return -1;
-		}
-		double t1 = ia_histogram_time();
-		double td = t1 - t0;
-		ia_histogram_add(&ioarena.hg, td);
-		ia_histogram_done(&ioarena.hg, i, ioarena.kv.ksize,
-		                  ioarena.kv.vsize);
-		i++;
-	}
-	return 0;
+	iacontext* ctx = calloc(1, sizeof(iacontext));
+	return ctx;
 }
 
-static inline int
-ia_sophia_delete(void)
+void ia_sophia_thread_dispose(iacontext *ctx)
 {
-	iadriver *self = ioarena.driver;
-	iasophia *s = self->priv;
-	uint64_t i = 0;
-	while (i < ioarena.conf.count)
-	{
-		ia_kv(&ioarena.kv);
-		double t0 = ia_histogram_time();
-		void *o = sp_object(s->db);
-		sp_setstring(o, "key",   ioarena.kv.k, ioarena.kv.ksize);
-		int rc = sp_delete(s->db, o);
-		if (rc == -1) {
-			char *e = sp_getstring(s->env, "sophia.error", 0);
-			ia_log("error: %s", e);
-			free(e);
-			return -1;
-		}
-		double t1 = ia_histogram_time();
-		double td = t1 - t0;
-		ia_histogram_add(&ioarena.hg, td);
-		ia_histogram_done(&ioarena.hg, i, ioarena.kv.ksize,
-		                  ioarena.kv.vsize);
-		i++;
-	}
-	return 0;
+	if (ctx->cursor)
+		sp_destroy(ctx->cursor);
+	if (ctx->txn)
+		sp_destroy(ctx->txn);
+	if (ctx->entry)
+		sp_destroy(ctx->entry);
+	free(ctx);
 }
 
-static inline int
-ia_sophia_get(void)
+static int ia_sophia_begin(iacontext *ctx, iabenchmark step)
 {
-	iadriver *self = ioarena.driver;
-	iasophia *s = self->priv;
-	uint64_t i = 0;
-	while (i < ioarena.conf.count)
-	{
-		ia_kv(&ioarena.kv);
-		double t0 = ia_histogram_time();
-		void *o = sp_object(s->db);
-		sp_setstring(o, "key", ioarena.kv.k, ioarena.kv.ksize);
-		o = sp_get(s->db, o);
-		if (o == NULL) {
-			ia_log("error: key %s not found", ioarena.kv.k);
-			char *e = sp_getstring(s->env, "sophia.error", 0);
-			if (e) {
-				ia_log("error: %s", e);
-				free(e);
+	iaprivate *self = ioarena.driver->priv;
+	char *error;
+	int rc = 0;
+
+	switch(step) {
+	case IA_SET:
+	case IA_DELETE:
+	case IA_GET:
+		ctx->txn = self->db;
+		break;
+
+	case IA_BATCH:
+		ctx->txn = sp_batch(self->db);
+		if (ctx->txn == NULL)
+			goto bailout;
+		break;
+
+	case IA_CRUD:
+		ctx->txn = sp_begin(self->env);
+		if (ctx->txn == NULL)
+			goto bailout;
+		break;
+
+	case IA_ITERATE:
+		ctx->cursor = sp_cursor(self->env);
+		if (ctx->cursor == NULL)
+			goto bailout;
+		ctx->entry = sp_object(self->db);
+		break;
+
+	default:
+		assert(0);
+		rc = -1;
+	}
+
+	return rc;
+
+bailout:
+	error = sp_getstring(self->env, "sophia.error", 0);
+	ia_log("error: %s, %s, %s (%d)", __FUNCTION__,
+		ia_benchmarkof(step), error, sp_getint(self->env, "sophia.error"));
+	free(error);
+	return -1;
+}
+
+static int ia_sophia_done(iacontext* ctx, iabenchmark step)
+{
+	iaprivate *self = ioarena.driver->priv;
+	char *error;
+	int rc = 0;
+
+	switch(step) {
+	case IA_SET:
+	case IA_DELETE:
+	case IA_GET:
+		ctx->txn = NULL;
+		break;
+
+	case IA_BATCH:
+	case IA_CRUD:
+		if (ctx->txn)
+			rc = sp_commit(ctx->txn);
+		if (rc) {
+			sp_destroy(ctx->txn);
+			ctx->txn = NULL;
+			goto bailout;
+		}
+		ctx->txn = NULL;
+		break;
+
+	case IA_ITERATE:
+		if (ctx->entry) {
+			sp_destroy(ctx->entry);
+			ctx->entry = NULL;
+		}
+		if (ctx->cursor) {
+			sp_destroy(ctx->cursor);
+			ctx->cursor = NULL;
+		}
+		ctx->txn = NULL;
+		break;
+
+	default:
+		assert(0);
+		rc = -1;
+	}
+
+	return rc;
+
+bailout:
+	error = sp_getstring(self->env, "sophia.error", 0);
+	ia_log("error: %s, %s, %s (%d)", __FUNCTION__,
+		ia_benchmarkof(step), error, sp_getint(self->env, "sophia.error"));
+	free(error);
+	return -1;
+}
+
+static int ia_sophia_next(iacontext* ctx, iabenchmark step, iakv *kv)
+{
+	iaprivate *self = ioarena.driver->priv;
+	char *error;
+	int rc = 0;
+
+	switch(step) {
+	case IA_SET:
+		ctx->entry = sp_object(self->db);
+		sp_setstring(ctx->entry, "key", kv->k, kv->ksize);
+		sp_setstring(ctx->entry, "value", kv->v, kv->vsize);
+		rc = sp_set(ctx->txn, ctx->entry);
+		if (rc == -1)
+			goto bailout;
+		ctx->entry = NULL;
+		break;
+
+	case IA_DELETE:
+		ctx->entry = sp_object(self->db);
+		sp_setstring(ctx->entry, "key", kv->k, kv->ksize);
+		rc = sp_delete(ctx->txn, ctx->entry);
+		if (rc == -1)
+			goto bailout;
+		ctx->entry = NULL;
+		break;
+
+	case IA_GET:
+		if (ctx->entry)
+			sp_destroy(ctx->entry);
+		ctx->entry = sp_object(self->db);
+		sp_setstring(ctx->entry, "key", kv->k, kv->ksize);
+		ctx->entry = sp_get(self->db, ctx->entry);
+		if (ctx->entry == NULL) {
+			error = sp_getstring(self->env, "sophia.error", 0);
+			if (error)
+				goto error_done;
+			rc = ctx->txn ? 0 : ENOENT; /* TODO */
+		} else {
+			int vlen = 0;
+			kv->v = sp_getstring(ctx->entry, "value", &vlen);
+			if (kv->v == NULL) {
+				error = sp_getstring(self->env, "sophia.error", 0);
+				if (error)
+					goto error_done;
+				assert(vlen == 0);
 			}
-			return -1;
+			kv->vsize = vlen;
 		}
-		double t1 = ia_histogram_time();
-		double td = t1 - t0;
-		ia_histogram_add(&ioarena.hg, td);
-		sp_destroy(o);
-		ia_histogram_done(&ioarena.hg, i, ioarena.kv.ksize,
-		                  ioarena.kv.vsize);
-		i++;
-	}
-	return 0;
-}
+		break;
 
-static inline int
-ia_sophia_iterate(void)
-{
-	iadriver *self = ioarena.driver;
-	iasophia *s = self->priv;
-	void *cursor = sp_cursor(s->env);
-	if (cursor == NULL) {
-		char *e = sp_getstring(s->env, "sophia.error", 0);
-		if (e) {
-			ia_log("error: %s", e);
-			free(e);
+	case IA_ITERATE:
+		ctx->entry = sp_get(ctx->cursor, ctx->entry);
+		if (ctx->entry == NULL) {
+			error = sp_getstring(self->env, "sophia.error", 0);
+			if (error)
+				goto error_done;
+			rc = ENOENT;
+		} else {
+			int klen = 0;
+			kv->k = sp_getstring(ctx->entry, "key", &klen);
+			if (kv->k == NULL)
+				goto bailout;
+			kv->ksize = klen;
+
+			int vlen = 0;
+			kv->v = sp_getstring(ctx->entry, "value", &vlen);
+			if (kv->v == NULL) {
+				error = sp_getstring(self->env, "sophia.error", 0);
+				if (error)
+					goto error_done;
+				assert(vlen == 0);
+			}
+			kv->vsize = vlen;
 		}
-		return -1;
-	}
-	uint64_t i = 0;
-	void *o = sp_object(s->db);
-	for (;;) {
-		double t0 = ia_histogram_time();
-		o = sp_get(cursor, o);
-		double t1 = ia_histogram_time();
-		double td = t1 - t0;
-		ia_histogram_add(&ioarena.hg, td);
-		if (o == NULL)
-			break;
-		ia_histogram_done(&ioarena.hg, i, ioarena.kv.ksize,
-		                  ioarena.kv.vsize);
-		i++;
-	}
-	sp_destroy(cursor);
-	return 0;
-}
+		break;
 
-static inline int
-ia_sophia_batch(void)
-{
-	iadriver *self = ioarena.driver;
-	iasophia *s = self->priv;
-	uint64_t i = 0;
-	while (i < ioarena.conf.count)
-	{
-		void *batch = sp_batch(s->db);
-		if (batch == NULL)
-			goto error;
-		int j = 0;
-		while (j < 500 && (i < ioarena.conf.count))
-		{
-			ia_kv(&ioarena.kv);
-			double t0 = ia_histogram_time();
-			void *o = sp_object(s->db);
-			sp_setstring(o, "key",   ioarena.kv.k, ioarena.kv.ksize);
-			sp_setstring(o, "value", ioarena.kv.v, ioarena.kv.vsize);
-			int rc = sp_set(batch, o);
-			if (rc == -1)
-				goto error;
-			double t1 = ia_histogram_time();
-			double td = t1 - t0;
-			ia_histogram_add(&ioarena.hg, td);
-			ia_histogram_done(&ioarena.hg, i, ioarena.kv.ksize,
-			                  ioarena.kv.vsize);
-			j++;
-			i++;
-		}
-		int rc = sp_commit(batch);
-		if (rc == -1)
-			goto error;
-		assert(rc == 0);
+	default:
+		assert(0);
+		rc = -1;
 	}
-	return 0;
-error:;
-	char *e = sp_getstring(s->env, "sophia.error", 0);
-	ia_log("error: %s", e);
-	free(e);
-	return -1;
-}
 
-static inline int
-ia_sophia_transaction(void)
-{
-	iadriver *self = ioarena.driver;
-	iasophia *s = self->priv;
-	uint64_t i = 0;
-	while (i < ioarena.conf.count)
-	{
-		void *batch = sp_begin(s->env);
-		if (batch == NULL)
-			goto error;
-		int j = 0;
-		while (j < 500 && (i < ioarena.conf.count))
-		{
-			ia_kv(&ioarena.kv);
-			double t0 = ia_histogram_time();
-			void *o = sp_object(s->db);
-			sp_setstring(o, "key",   ioarena.kv.k, ioarena.kv.ksize);
-			sp_setstring(o, "value", ioarena.kv.v, ioarena.kv.vsize);
-			int rc = sp_set(batch, o);
-			if (rc == -1)
-				goto error;
-			double t1 = ia_histogram_time();
-			double td = t1 - t0;
-			ia_histogram_add(&ioarena.hg, td);
-			ia_histogram_done(&ioarena.hg, i, ioarena.kv.ksize,
-			                  ioarena.kv.vsize);
-			j++;
-			i++;
-		}
-		int rc = sp_commit(batch);
-		if (rc == -1)
-			goto error;
-		assert(rc == 0);
-	}
-	return 0;
-error:;
-	char *e = sp_getstring(s->env, "sophia.error", 0);
-	ia_log("error: %s", e);
-	free(e);
-	return -1;
-}
+	return rc;
 
-static int ia_sophia_run(iabenchmark bench)
-{
-	switch (bench) {
-	case IA_SET:         return ia_sophia_set();
-	case IA_GET:         return ia_sophia_get();
-	case IA_DELETE:      return ia_sophia_delete();
-	case IA_ITERATE:     return ia_sophia_iterate();
-	case IA_BATCH:       return ia_sophia_batch();
-	case IA_TRANSACTION: return ia_sophia_transaction();
-	default: assert(0);
-	}
+bailout:
+	error = sp_getstring(self->env, "sophia.error", 0);
+error_done:
+	ia_log("error: %s, %s, %s (%d)", __FUNCTION__,
+		ia_benchmarkof(step), error, sp_getint(self->env, "sophia.error"));
+	free(error);
 	return -1;
 }
 
@@ -304,5 +325,10 @@ iadriver ia_sophia =
 	.priv  = NULL,
 	.open  = ia_sophia_open,
 	.close = ia_sophia_close,
-	.run   = ia_sophia_run
+
+	.thread_new = ia_sophia_thread_new,
+	.thread_dispose = ia_sophia_thread_dispose,
+	.begin	= ia_sophia_begin,
+	.next	= ia_sophia_next,
+	.done	= ia_sophia_done
 };

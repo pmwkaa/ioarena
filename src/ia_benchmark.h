@@ -8,52 +8,25 @@
  * BSD License
 */
 
-typedef enum {
-	IA_SET,
-	IA_BATCH,
-	IA_TRANSACTION,
-	IA_DELETE,
-	IA_ITERATE,
-	IA_GET,
-	IA_MAX
-} iabenchmark;
+extern const long bench_mask_read;
+extern const long bench_mask_write;
 
-static inline char*
-ia_benchmarkof(iabenchmark b)
-{
-	switch (b) {
-	case IA_SET:         return "set";
-	case IA_GET:         return "get";
-	case IA_DELETE:      return "delete";
-	case IA_ITERATE:     return "iterate";
-	case IA_BATCH:       return "batch";
-	case IA_TRANSACTION: return "transaction";
-	default: assert(0);
-	}
-	return NULL;
-}
+const char* ia_benchmarkof(iabenchmark bench);
+iabenchmark ia_benchmark(const char *name);
 
-static inline iabenchmark
-ia_benchmark(char *name)
-{
-	if (strcasecmp(name, "set") == 0)
-		return IA_SET;
-	else
-	if (strcasecmp(name, "get") == 0)
-		return IA_GET;
-	else
-	if (strcasecmp(name, "delete") == 0)
-		return IA_DELETE;
-	else
-	if (strcasecmp(name, "iterate") == 0)
-		return IA_ITERATE;
-	else
-	if (strcasecmp(name, "batch") == 0)
-		return IA_BATCH;
-	else
-	if (strcasecmp(name, "transaction") == 0)
-		return IA_TRANSACTION;
-	return IA_MAX;
-}
+typedef struct iadoer iadoer;
+
+struct iadoer {
+	int nth;
+	int key_space, key_sequence;
+	long benchmask;
+	iacontext *ctx;
+	struct iakvpool pool;
+	iahistogram hg;
+};
+
+void ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_sequence);
+int ia_doer_fulfil(iadoer *doer);
+void ia_doer_destroy(iadoer *doer);
 
 #endif

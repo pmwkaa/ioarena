@@ -1,15 +1,22 @@
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 
 project(ioarena)
+message (STATUS "IOARENA: embedded storage benchmarking.")
+execute_process (COMMAND getconf _NPROCESSORS_ONLN
+	OUTPUT_VARIABLE NB_PROCESSOR OUTPUT_STRIP_TRAILING_WHITESPACE)
+math (EXPR MAKE_NJOB "((${NB_PROCESSOR}) + 1) * 3 / 2")
+message (STATUS "")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -std=c99 -Wall -Wextra -g")
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
+	set(CMAKE_C_FLAGS "${CMAKE_CXx_FLAGS} -O2")
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
+	set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 endif()
 
 add_custom_target(build_libs)
@@ -67,6 +74,16 @@ if (ENABLE_LMDB)
 	include_directories(${LMDB_INCLUDE_DIRS})
 endif(ENABLE_LMDB)
 
+# LMDBx
+option(ENABLE_MDBX "Enable MDBX" OFF)
+if (ENABLE_MDBX)
+	include(BuildMDBX)
+	build_mdbx()
+	set(HAVE_MDBX 1)
+	set(ia_libraries ${ia_libraries} ${MDBX_LIBRARIES})
+	include_directories(${MDBX_INCLUDE_DIRS})
+endif(ENABLE_MDBX)
+
 # WiredTiger
 option(ENABLE_WIREDTIGER "Enable WiredTiger" OFF)
 if (ENABLE_WIREDTIGER)
@@ -93,7 +110,7 @@ if (ENABLE_FORESTDB)
 	include_directories(${FORESTDB_INCLUDE_DIRS})
 endif(ENABLE_FORESTDB)
 
-# nessDB
+# NessDB
 option(ENABLE_NESSDB "Enable nessDB" OFF)
 if (ENABLE_NESSDB)
 	find_package(nessDB QUIET)
@@ -106,10 +123,9 @@ if (ENABLE_NESSDB)
 	include_directories(${NESSDB_INCLUDE_DIRS})
 endif(ENABLE_NESSDB)
 
-
-
 message (STATUS "")
 message (STATUS "IOARENA: embedded storage benchmarking.")
+
 message (STATUS "")
 message (STATUS "ENABLE_LEVELDB:    ${ENABLE_LEVELDB}")
 message (STATUS "ENABLE_ROCKSDB:    ${ENABLE_ROCKSDB}")
@@ -117,7 +133,12 @@ message (STATUS "ENABLE_SOPHIA:     ${ENABLE_SOPHIA}")
 message (STATUS "ENABLE_WIREDTIGER: ${ENABLE_WIREDTIGER}")
 message (STATUS "ENABLE_FORESTDB:   ${ENABLE_FORESTDB}")
 message (STATUS "ENABLE_LMDB:       ${ENABLE_LMDB}")
-message (STATUS "ENABLE_nessDB:     ${ENABLE_NESSDB}")
+message (STATUS "ENABLE_MDBX:       ${ENABLE_MDBX}")
+message (STATUS "ENABLE_NESSDB:     ${ENABLE_NESSDB}")
 message (STATUS "")
+
+#message (STATUS "NB_PROCESSOR: ${NB_PROCESSOR}")
+#message (STATUS "MAKE_NJOB: ${MAKE_NJOB}")
+#message (STATUS "")
 
 add_subdirectory(src)

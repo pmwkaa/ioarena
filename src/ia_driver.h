@@ -9,13 +9,21 @@
 */
 
 typedef struct iadriver iadriver;
+typedef struct iaprivate iaprivate;
+typedef struct iacontext iacontext;
 
 struct iadriver {
 	const char *name;
-	void *priv;
-	int (*open)(void);
+	iaprivate *priv;
+	int (*open)(const char *datadir);
 	int (*close)(void);
-	int (*run)(iabenchmark);
+
+	iacontext* (*thread_new)(void);
+	void (*thread_dispose)(iacontext*);
+
+	int (*begin)(iacontext*, iabenchmark);
+	int (*next)(iacontext*, iabenchmark, iakv *kv);
+	int (*done)(iacontext*, iabenchmark);
 };
 
 #endif
