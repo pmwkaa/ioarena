@@ -109,7 +109,7 @@ ia_configusage(iaconfig *c)
 	ia_log("  -k <key_size>                (%d)", c->ksize);
 	ia_log("  -v <value_size>              (%d)", c->vsize);
 	ia_log("  -m <sync_mode>               (%s)", ia_syncmode2str(c->syncmode));
-	ia_log("  -l <wal_mode>                (%s)", ia_syncmode2str(c->walmode));
+	ia_log("  -l <wal_mode>                (%s)", ia_walmode2str(c->walmode));
 	ia_log("  -r <number_of_read_threads>  (%d)", c->rthr);
 	ia_log("  -w <number_of_crud_threads>  (%d)", c->wthr);
 	ia_log("  -i ignore key-not-found");

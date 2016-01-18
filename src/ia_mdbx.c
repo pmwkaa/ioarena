@@ -61,7 +61,7 @@ static int ia_mdbx_open(const char *datadir)
 		break;
 	default:
 		ia_log("error: %s(): unsupported syncmode %s",
-			__FUNCTION__, ia_syncmode2str(ioarena.conf.syncmode));
+			__func__, ia_syncmode2str(ioarena.conf.syncmode));
 		return -1;
 	}
 
@@ -72,7 +72,7 @@ static int ia_mdbx_open(const char *datadir)
 	case IA_WAL_ON:
 	default:
 		ia_log("error: %s(): unsupported walmode %s",
-			__FUNCTION__, ia_walmode2str(ioarena.conf.walmode));
+			__func__, ia_walmode2str(ioarena.conf.walmode));
 		return -1;
 	}
 
@@ -82,7 +82,7 @@ static int ia_mdbx_open(const char *datadir)
 	return 0;
 
 bailout:
-	ia_log("error: %s, %s (%d)", __FUNCTION__, mdbx_strerror(rc), rc);
+	ia_log("error: %s, %s (%d)", __func__, mdbx_strerror(rc), rc);
 	return -1;
 }
 
@@ -124,7 +124,7 @@ static iacontext* ia_mdbx_thread_new(void)
 	return ctx;
 
 bailout:
-	ia_log("error: %s, %s (%d)", __FUNCTION__, mdbx_strerror(rc), rc);
+	ia_log("error: %s, %s (%d)", __func__, mdbx_strerror(rc), rc);
 	return NULL;
 }
 
@@ -202,7 +202,7 @@ static int ia_mdbx_begin(iacontext *ctx, iabenchmark step)
 	return rc;
 
 bailout:
-	ia_log("error: %s, %s, %s (%d)", __FUNCTION__,
+	ia_log("error: %s, %s, %s (%d)", __func__,
 		ia_benchmarkof(step), mdbx_strerror(rc), rc);
 	return -1;
 }
@@ -238,7 +238,7 @@ static int ia_mdbx_done(iacontext* ctx, iabenchmark step)
 	return rc;
 
 bailout:
-	ia_log("error: %s, %s, %s (%d)", __FUNCTION__,
+	ia_log("error: %s, %s, %s (%d)", __func__,
 		ia_benchmarkof(step), mdbx_strerror(rc), rc);
 	return -1;
 }
@@ -307,7 +307,7 @@ static int ia_mdbx_next(iacontext* ctx, iabenchmark step, iakv *kv)
 	return rc;
 
 bailout:
-	ia_log("error: %s, %s, %s (%d)", __FUNCTION__,
+	ia_log("error: %s, %s, %s (%d)", __func__,
 		ia_benchmarkof(step), mdbx_strerror(rc), rc);
 	return -1;
 }

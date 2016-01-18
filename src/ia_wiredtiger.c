@@ -48,7 +48,7 @@ static int ia_wt_open(const char *datadir)
 		break;
 	default:
 		ia_log("error: %s(): unsupported syncmode %s",
-			__FUNCTION__, ia_syncmode2str(ioarena.conf.syncmode));
+			__func__, ia_syncmode2str(ioarena.conf.syncmode));
 		return -1;
 	}
 
@@ -65,7 +65,7 @@ static int ia_wt_open(const char *datadir)
 		break;
 	default:
 		ia_log("error: %s(): unsupported walmode %s",
-			__FUNCTION__, ia_walmode2str(ioarena.conf.walmode));
+			__func__, ia_walmode2str(ioarena.conf.walmode));
 		return -1;
 	}
 
@@ -96,7 +96,7 @@ static int ia_wt_open(const char *datadir)
 	return 0;
 
 bailout:
-	ia_log("error: %s, %s (%d)", __FUNCTION__, wiredtiger_strerror(rc), rc);
+	ia_log("error: %s, %s (%d)", __func__, wiredtiger_strerror(rc), rc);
 	if (session) {
 		(void) session->rollback_transaction(session, NULL);
 		session->close(session, NULL);
@@ -146,7 +146,7 @@ static iacontext* ia_wiredtiger_thread_new(void)
 	return ctx;
 
 bailout:
-	ia_log("error: %s, %s (%d)", __FUNCTION__, wiredtiger_strerror(rc), rc);
+	ia_log("error: %s, %s (%d)", __func__, wiredtiger_strerror(rc), rc);
 	ia_wiredtiger_thread_dispose(ctx);
 	return NULL;
 }
@@ -183,7 +183,7 @@ static int ia_wiredtiger_begin(iacontext *ctx, iabenchmark step)
 	return rc;
 
 bailout:
-	ia_log("error: %s, %s, %s (%d)", __FUNCTION__,
+	ia_log("error: %s, %s, %s (%d)", __func__,
 		ia_benchmarkof(step), wiredtiger_strerror(rc), rc);
 	return -1;
 }
@@ -220,7 +220,7 @@ static int ia_wiredtiger_done(iacontext* ctx, iabenchmark step)
 	return rc;
 
 bailout:
-	ia_log("error: %s, %s, %s (%d)", __FUNCTION__,
+	ia_log("error: %s, %s, %s (%d)", __func__,
 		ia_benchmarkof(step), wiredtiger_strerror(rc), rc);
 	if(ctx->transaction) {
 		(void) ctx->session->rollback_transaction(ctx->session, NULL);
@@ -300,7 +300,7 @@ static int ia_wiredtiger_next(iacontext* ctx, iabenchmark step, iakv *kv)
 	return rc;
 
 bailout:
-	ia_log("error: %s, %s, %s (%d)", __FUNCTION__,
+	ia_log("error: %s, %s, %s (%d)", __func__,
 		ia_benchmarkof(step), wiredtiger_strerror(rc), rc);
 	return -1;
 }

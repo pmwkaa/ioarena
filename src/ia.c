@@ -61,7 +61,7 @@ static void ia_sync_start(ia *a)
 	int rc = pthread_barrier_wait(&a->barrier_start);
 	if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
 		ia_log("error: pthread_barrier_wait %s (%d)", strerror(rc), rc);
-		ia_fatal(__FUNCTION__);
+		ia_fatal(__func__);
 	}
 }
 
@@ -70,7 +70,7 @@ static void ia_sync_fihish(ia *a)
 	int rc = pthread_barrier_wait(&a->barrier_fihish);
 	if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
 		ia_log("error: pthread_barrier_wait %s (%d)", strerror(rc), rc);
-		ia_fatal(__FUNCTION__);
+		ia_fatal(__func__);
 	}
 }
 

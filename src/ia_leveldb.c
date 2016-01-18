@@ -49,7 +49,7 @@ static int ia_leveldb_open(const char *datadir)
 		break;
 	default:
 		ia_log("error: %s(): unsupported syncmode %s",
-			__FUNCTION__, ia_syncmode2str(ioarena.conf.syncmode));
+			__func__, ia_syncmode2str(ioarena.conf.syncmode));
 		return -1;
 	}
 
@@ -60,7 +60,7 @@ static int ia_leveldb_open(const char *datadir)
 	case IA_WAL_OFF:
 	default:
 		ia_log("error: %s(): unsupported walmode %s",
-			__FUNCTION__, ia_walmode2str(ioarena.conf.walmode));
+			__func__, ia_walmode2str(ioarena.conf.walmode));
 		return -1;
 	}
 
@@ -72,7 +72,7 @@ static int ia_leveldb_open(const char *datadir)
 	return 0;
 
 bailout:
-	ia_log("error: %s, %s", __FUNCTION__, error);
+	ia_log("error: %s, %s", __func__, error);
 	free(error);
 	return -1;
 }
@@ -150,7 +150,7 @@ static int ia_leveldb_begin(iacontext *ctx, iabenchmark step)
 	return rc;
 
 bailout:
-	ia_log("error: %s, %s, %s", __FUNCTION__,
+	ia_log("error: %s, %s, %s", __func__,
 		ia_benchmarkof(step), error);
 	return -1;
 }
@@ -197,7 +197,7 @@ static int ia_leveldb_done(iacontext* ctx, iabenchmark step)
 	return rc;
 
 bailout:
-	ia_log("error: %s, %s, %s", __FUNCTION__,
+	ia_log("error: %s, %s, %s", __func__,
 		ia_benchmarkof(step), error);
 	free(error);
 	return -1;
@@ -261,7 +261,7 @@ static int ia_leveldb_next(iacontext* ctx, iabenchmark step, iakv *kv)
 	return rc;
 
 bailout:
-	ia_log("error: %s, %s, %s", __FUNCTION__,
+	ia_log("error: %s, %s, %s", __func__,
 		ia_benchmarkof(step), error);
 	free(error);
 	return -1;

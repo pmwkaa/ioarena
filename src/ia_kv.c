@@ -83,7 +83,7 @@ void ia_kvpool_fill(struct iakvpool *pool, size_t nbandles, size_t nelem)
 	char* dst = realloc(pool->flat, bytes);
 	if (! dst) {
 		ia_log("error: out of memory");
-		ia_fatal(__FUNCTION__);
+		ia_fatal(__func__);
 	}
 
 	pool->flat = dst;
