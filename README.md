@@ -11,10 +11,14 @@ The goal of this project is to provide a standart and simple
 in use instrument for benchmarking, so any database developer or user
 can reference to or repeat obtained results.
 
-Benchmarking methods: *set*, *get*, *iterate*, *batch*, *transaction*
+Benchmarking methods: *set*, *get*, *delete*, *iterate*, *batch*, *CRUD*
+
+Sync modes: *sync*, *lazy*, *no-sync*
+
+WAL modes: *indef* (per engine default), *wal-on*, *wal-off*
 
 Supported databases: **rocksdb**, **leveldb**, **forestdb**, **lmdb**,
-**mdbx (modified lmdb), **nessdb**, **wiredtiger**, **sophia**
+**mdbx** (modified lmdb), ~~nessdb~~, **wiredtiger**, **sophia**
 
 *New drivers or any kind of enhancements are very welcome!*
 
@@ -26,26 +30,28 @@ IOARENA (embedded storage benchmarking)
 
 usage: ioarena [hDBCpnkvmlrwic]
   -D <database_driver>
-      leveldb, rocksdb, wiredtiger, sophia, forestdb,
-	  lmdb, mdbx, nessdb, dummy
+     choices: sophia, leveldb, rocksdb, wiredtiger, forestdb, lmdb, mdbx, dummy
   -B <benchmarks>
-      set, get, delete, iterate
-      batch, crud
-  -C generate csv
-  -p <path>                    (./_ioarena)
-  -n <number_of_operations>    (1000000)
-  -k <key_size>                (16)
-  -v <value_size>              (32)
-  -m <sync_mode>               (lazy)
-  -l <wal_mode>                (indef)
-  -r <number_of_read_threads>  (0)
-  -w <number_of_crud_threads>  (0)
-  -i ignore key-not-found
-  -c continuous completing
-  -h                           help
+     choices: set, get, delete, iterate, batch, crud
+  -m <sync_mode>                     (default: lazy)
+     choices: sync, lazy, nosync
+  -l <wal_mode>                      (default: indef)
+     choices: indef, walon, waloff
+  -C <name-prefix> generate csv      (default: (null))
+  -p <path> for temporaries          (default: ./_ioarena)
+  -n <number_of_operations>          (default: 1000000)
+  -k <key_size>                      (default: 16)
+  -v <value_size>                    (default: 32)
+  -c continuous completing mode      (default: no)
+  -r <number_of_read_threads>        (default: 0)
+     `zero` to use single main/common thread
+  -w <number_of_crud/write_threads>  (default: 0)
+     `zero` to use single main/common thread
+  -i ignore key-not-found error      (default: no)
+  -h                                 help
 
-  example:
-     ioarena -D rocksdb -T set,get -n 100000000
+example:
+   ioarena -m sync -D sophia -B crud -n 100000000
 ```
 
 Build
