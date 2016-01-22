@@ -2,7 +2,8 @@
 /*
  * ioarena: embedded storage benchmarking
  *
- * Copyright (c) ioarena authors
+ * Copyright (c) Dmitry Simonenko
+ * Copyright (c) Leonid Yuriev
  * BSD License
 */
 
@@ -99,25 +100,28 @@ ia_configusage(iaconfig *c)
 {
 	ia_log("usage: ioarena [hDBCpnkvmlrwic]");
 	ia_log("  -D <database_driver>");
-	ia_log("     %s", ia_supported());
+	ia_log("     choices: %s", ia_supported());
 	ia_log("  -B <benchmarks>");
-	ia_log("     set, get, delete, iterate");
-	ia_log("     batch, crud");
-	ia_log("  -C generate csv                 ");
-	ia_log("  -p <path>                    (%s)", c->path);
-	ia_log("  -n <number_of_operations>    (%d)", c->count);
-	ia_log("  -k <key_size>                (%d)", c->ksize);
-	ia_log("  -v <value_size>              (%d)", c->vsize);
-	ia_log("  -m <sync_mode>               (%s)", ia_syncmode2str(c->syncmode));
-	ia_log("  -l <wal_mode>                (%s)", ia_walmode2str(c->walmode));
-	ia_log("  -r <number_of_read_threads>  (%d)", c->rthr);
-	ia_log("  -w <number_of_crud_threads>  (%d)", c->wthr);
-	ia_log("  -i ignore key-not-found");
-	ia_log("  -c continuous completing");
-	ia_log("  -h                           help");
+	ia_log("     choices: set, get, delete, iterate, batch, crud");
+	ia_log("  -m <sync_mode>                     (default: %s)", ia_syncmode2str(c->syncmode));
+	ia_log("     choices: sync, lazy, nosync");
+	ia_log("  -l <wal_mode>                      (default: %s)", ia_walmode2str(c->walmode));
+	ia_log("     choices: indef, walon, waloff");
+	ia_log("  -C <name-prefix> generate csv      (default: %s)", c->csv_prefix );
+	ia_log("  -p <path> for temporaries          (default: %s)", c->path);
+	ia_log("  -n <number_of_operations>          (default: %d)", c->count);
+	ia_log("  -k <key_size>                      (default: %d)", c->ksize);
+	ia_log("  -v <value_size>                    (default: %d)", c->vsize);
+	ia_log("  -c continuous completing mode      (default: %s)", c->continuous_completing ? "yes" : "no");
+	ia_log("  -r <number_of_read_threads>        (default: %d)", c->rthr);
+	ia_log("     `zero` to use single main/common thread");
+	ia_log("  -w <number_of_crud/write_threads>  (default: %d)", c->wthr);
+	ia_log("     `zero` to use single main/common thread");
+	ia_log("  -i ignore key-not-found error      (default: %s)", c->ignore_keynotfound ? "yes" : "no");
+	ia_log("  -h                                 help");
 	ia_log("");
 	ia_log("example:");
-	ia_log("   ioarena -D sophia -T set,get -n 100000000");
+	ia_log("   ioarena -m sync -D sophia -B crud -n 100000000");
 }
 
 int ia_configparse(iaconfig *c, int argc, char **argv)
