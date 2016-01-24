@@ -19,6 +19,10 @@ elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 endif()
 
+# LY: rpath hint for running with libraries that
+#     we had compiled (or found), but avoids mixing.
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+
 add_custom_target(build_libs)
 set(ia_libraries "")
 
