@@ -1,3 +1,28 @@
+This is the HL++2015 branch
+===========================
+
+Here is the script `HL2015.mk` that was used to benchmarking
+for speech/presentation about LMDB & MDBX
+on the Highload++2015 Conference in Moscow/Russia.
+
+This script is publicly available to any interested
+could reproduce the benchmark results. Also the script may
+be a good example of how you can use ioarena.
+
+Original title of speech/presentation in russian
+is "Движок LMDB - особенный чемпион", that could be translated
+as "LMDB engine - is the bizarre champion".
+
+For more information please see:
+* [abstract in russian](http://www.highload.ru/2015/abstracts/1831.html)
+* [translation by Yandex](https://translate.yandex.ru/translate?url=http://www.highload.ru/2015/abstracts/1831.html)
+* [translation by Google](https://translate.google.com/translate?sl=ru&tl=en&u=www.highload.ru%2F2015%2Fabstracts%2F1831.html)
+* [slides](http://www.slideshare.net/leoyuriev/lmdb)
+* [about Highload++](http://highload.co/)
+
+
+=======================================================================
+
 
 **ioarena** - embedded storage benchmarking
 -------------------------------------------
