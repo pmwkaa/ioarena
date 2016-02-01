@@ -11,6 +11,7 @@ set(ia_src
     ia_kv.c
     ia_log.c
     ia.c
+    ia_time.c
     ia_main.c)
 
 include_directories("${PROJECT_SOURCE_DIR}/src")

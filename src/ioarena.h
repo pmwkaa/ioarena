@@ -75,6 +75,7 @@ typedef enum {
 	IA_WAL_OFF
 } iawalmode;
 
+#include <ia_time.h>
 #include <ia_rusage.h>
 #include <ia_kv.h>
 #include <ia_driver.h>

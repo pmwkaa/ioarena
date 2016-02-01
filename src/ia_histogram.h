@@ -12,9 +12,6 @@ typedef struct iahistogram iahistogram;
 
 #define ST_HISTOGRAM_COUNT 167
 
-typedef uint64_t ia_timestamp_t;
-ia_timestamp_t ia_timestamp_ns(void);
-
 struct iastat {
 	uint64_t latency_sum_ns, latency_sum_square;
 	uint64_t n, volume_sum;

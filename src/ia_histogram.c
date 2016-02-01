@@ -8,29 +8,8 @@
 
 #include <ioarena.h>
 
-#if defined(CLOCK_MONOTONIC_RAW)
-#	define CLOCK_ID	CLOCK_MONOTONIC_RAW
-#elif defined(CLOCK_MONOTONIC)
-#	define CLOCK_ID	CLOCK_MONOTONIC
-#else
-#	define CLOCK_ID	CLOCK_REALTIME
-#endif
-
-#define US 1000ull
-#define MS 1000000ull
-#define S  1000000000ull
-
 #define INTERVAL_STAT	S
 #define INTERVAL_MERGE	(S/100)
-
-ia_timestamp_t ia_timestamp_ns(void)
-{
-	struct timespec ts;
-	int rc = clock_gettime(CLOCK_ID, &ts);
-	assert(rc == 0);
-	(void) rc;
-	return ts.tv_sec * S + ts.tv_nsec;
-}
 
 static const uint64_t
 ia_histogram_buckets[ST_HISTOGRAM_COUNT] =
