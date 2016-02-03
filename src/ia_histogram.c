@@ -11,7 +11,7 @@
 #define INTERVAL_STAT	S
 #define INTERVAL_MERGE	(S/100)
 
-static const uint64_t
+static const uintmax_t
 ia_histogram_buckets[ST_HISTOGRAM_COUNT] =
 {
 	#define LINE_12_100(M) \
@@ -219,8 +219,8 @@ int ia_histogram_checkpoint(ia_timestamp_t now)
 			continue;
 
 		const char *name = ia_benchmarkof(h->bench);
-		const uint64_t n = h->acc.n - h->last.n;
-		const uint64_t vol = h->acc.volume_sum - h->last.volume_sum;
+		const uintmax_t n = h->acc.n - h->last.n;
+		const uintmax_t vol = h->acc.volume_sum - h->last.volume_sum;
 
 		s += snprintf(s, line + sizeof(line) - s, " | %5s", name );
 		if (n) {
@@ -313,7 +313,7 @@ void ia_histogram_merge(iahistogram *src)
 void
 ia_histogram_add(iahistogram *h, ia_timestamp_t t0, size_t volume)
 {
-	uint64_t now = ia_timestamp_ns();
+	uintmax_t now = ia_timestamp_ns();
 	ia_timestamp_t latency = now - t0;
 
 	h->acc.latency_sum_ns += latency;
@@ -374,7 +374,7 @@ void ia_histogram_print(const iaconfig *config)
 			continue;
 
 		const char *name = ia_benchmarkof(h->bench);
-		printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> %s(%zu)\n", name, h->acc.n);
+		printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> %s(%ju)\n", name, h->acc.n);
 		FILE* csv = csv_create(config, name);
 
 		printf("[%8s   %8s   ]%16s%8s\n",
@@ -386,7 +386,7 @@ void ia_histogram_print(const iaconfig *config)
 
 		int i;
 		char line[1024], *s;
-		uint64_t n = 0;
+		uintmax_t n = 0;
 
 		for (i = 0; i < ST_HISTOGRAM_COUNT; i++) {
 			if (! h->buckets[i])
@@ -407,7 +407,7 @@ void ia_histogram_print(const iaconfig *config)
 			printf("%s\n", line);
 
 			if(csv)
-				fprintf(csv, "%e,\t%e,\t%zu,\t%e\n",
+				fprintf(csv, "%e,\t%e,\t%ju,\t%e\n",
 						((i > 0) ? ia_histogram_buckets[i - 1] : 0) / (double) S,
 						(ia_histogram_buckets[i] - 1) / (double) S,
 						h->buckets[i],
@@ -478,7 +478,7 @@ void ia_histogram_rusage(const iaconfig *config, const iarusage *start, const ia
 				"disk",
 				"ram"
 			);
-		fprintf(csv, "%zu,\t%zu,\t%zu,\t%e,\t%e,\t%e,\t%e\n",
+		fprintf(csv, "%ju,\t%ju,\t%ju,\t%e,\t%e,\t%e,\t%e\n",
 				fihish->iops_read - start->iops_read,
 				fihish->iops_write - start->iops_write,
 				fihish->iops_page - start->iops_page,

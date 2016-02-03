@@ -13,8 +13,8 @@ typedef struct iahistogram iahistogram;
 #define ST_HISTOGRAM_COUNT 167
 
 struct iastat {
-	uint64_t latency_sum_ns, latency_sum_square;
-	uint64_t n, volume_sum;
+	uintmax_t latency_sum_ns, latency_sum_square;
+	uintmax_t n, volume_sum;
 };
 
 struct iahistogram {
@@ -25,7 +25,7 @@ struct iahistogram {
 	struct iastat last;
 	ia_timestamp_t min, max;
 	struct iastat acc;
-	uint64_t buckets[ST_HISTOGRAM_COUNT];
+	uintmax_t buckets[ST_HISTOGRAM_COUNT];
 	int merge_evo;
 };
 

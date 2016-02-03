@@ -18,7 +18,7 @@ struct iaconfig {
 	int benchmark_list[IA_MAX];
 	int ksize;
 	int vsize;
-	uint64_t count;
+	uintmax_t count;
 	iasyncmode syncmode;
 	iawalmode walmode;
 	int rthr;

@@ -53,7 +53,7 @@ static int ia_quadruple(iadoer *doer, iakv *a, iakv *b)
 static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 {
 	int rc = 0, rc2;
-	uint64_t i;
+	uintmax_t i;
 
 	//const char *name = ia_benchmarkof(bench);
 	//ia_log("<< %s.%s-%d", ioarena.conf.driver, name, doer->nth);

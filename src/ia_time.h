@@ -8,7 +8,7 @@
  * BSD License
 */
 
-typedef uint64_t ia_timestamp_t;
+typedef uintmax_t ia_timestamp_t;
 ia_timestamp_t ia_timestamp_ns(void);
 
 #define US 1000ull
