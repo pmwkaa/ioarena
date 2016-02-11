@@ -10,7 +10,7 @@ message (STATUS "")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -std=c99 -Wall -Wextra -g")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -g")
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
 	set(CMAKE_C_FLAGS "${CMAKE_CXx_FLAGS} -O2")

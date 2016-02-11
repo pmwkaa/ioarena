@@ -1,5 +1,8 @@
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
 
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+find_package(Threads REQUIRED)
+
 set(ia_binary ioarena)
 set(ia_src
     ia_debug.c
@@ -13,6 +16,11 @@ set(ia_src
     ia.c
     ia_time.c
     ia_main.c)
+
+if(THREADS_HAVE_PTHREAD_ARG)
+	set_property(TARGET ${ia_binary} PROPERTY COMPILE_OPTIONS "-pthread")
+	set_property(TARGET ${ia_binary} PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
+endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 include_directories("${PROJECT_BINARY_DIR}/src")
@@ -52,7 +60,7 @@ endif (HAVE_NESSDB)
 add_executable(${ia_binary} ${ia_src})
 add_dependencies(${ia_binary} build_libs)
 
-target_link_libraries(${ia_binary} ${ia_libraries} m rt pthread)
+target_link_libraries(${ia_binary} ${ia_libraries} m "${CMAKE_THREAD_LIBS_INIT}")
 
 configure_file(
 	"ia_build.h.cmake"

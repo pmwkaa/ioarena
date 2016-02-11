@@ -57,7 +57,9 @@ void ia_free(ia *a)
 
 static void ia_sync_start(ia *a)
 {
-#if defined(__APPLE__) || defined(__MACH__)
+#ifdef _POSIX_PRIORITY_SCHEDULING
+	sched_yield();
+#elif defined(__APPLE__) || defined(__MACH__)
 	pthread_yield_np();
 #else
 	pthread_yield();
