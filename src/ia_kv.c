@@ -14,7 +14,7 @@
 #	define DEBUG_KEYGEN 0
 #endif
 
-void ia_kvpool_init(struct iakvpool *pool, int ksize, int vsize, int key_space, int key_sequence, uint64_t period)
+void ia_kvpool_init(struct iakvpool *pool, int ksize, int vsize, int key_space, int key_sequence, uintmax_t period)
 {
 	pool->space = (key_space % 257) * period;
 	pool->serial = key_sequence % period;
@@ -36,9 +36,9 @@ void ia_kvpool_destory(struct iakvpool *pool)
 }
 
 static
-char* kv_rnd(uint64_t *point, char* dst, char printable, int length)
+char* kv_rnd(uintmax_t *point, char* dst, char printable, int length)
 {
-	uint64_t gen = *point;
+	uintmax_t gen = *point;
 
 #if DEBUG_KEYGEN
 	(void) printable;
@@ -88,7 +88,7 @@ void ia_kvpool_fill(struct iakvpool *pool, size_t nbandles, size_t nelem)
 
 	pool->flat = dst;
 	for (i = 0; i < nbandles; ++i) {
-		uint64_t point = pool->space + pool->serial;
+		uintmax_t point = pool->space + pool->serial;
 		pool->serial = (pool->serial + 1) % pool->period;
 
 		for (j = 0; j < nelem; ++j) {

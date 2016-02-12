@@ -30,6 +30,29 @@
 #include <limits.h>
 #include <ftw.h>
 
+
+/* LY: Mac OS X workaround */
+#ifndef PTHREAD_BARRIER_SERIAL_THREAD
+
+#define PTHREAD_BARRIER_SERIAL_THREAD 1
+
+typedef struct {
+	pthread_mutex_t mutex;
+	pthread_cond_t cond;
+	int canary;
+	int threshold;
+} pthread_barrier_t;
+
+typedef struct {} pthread_barrierattr_t;
+
+int pthread_barrier_init(pthread_barrier_t* barrier, const pthread_barrierattr_t* attr, unsigned count);
+int pthread_barrier_destroy(pthread_barrier_t* barrier);
+int pthread_barrier_wait(pthread_barrier_t* barrier);
+
+#define IOARENA_NEEDS_PTHREAD_BARRIER_IMPL
+
+#endif /* PTHREAD_BARRIER_SERIAL_THREAD */
+
 typedef enum {
 	IA_SET,
 	IA_BATCH,
@@ -52,6 +75,7 @@ typedef enum {
 	IA_WAL_OFF
 } iawalmode;
 
+#include <ia_time.h>
 #include <ia_rusage.h>
 #include <ia_kv.h>
 #include <ia_driver.h>

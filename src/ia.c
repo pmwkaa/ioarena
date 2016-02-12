@@ -57,7 +57,13 @@ void ia_free(ia *a)
 
 static void ia_sync_start(ia *a)
 {
+#ifdef _POSIX_PRIORITY_SCHEDULING
+	sched_yield();
+#elif defined(__APPLE__) || defined(__MACH__)
+	pthread_yield_np();
+#else
 	pthread_yield();
+#endif
 	int rc = pthread_barrier_wait(&a->barrier_start);
 	if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
 		ia_log("error: pthread_barrier_wait %s (%d)", strerror(rc), rc);

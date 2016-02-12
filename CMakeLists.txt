@@ -10,7 +10,7 @@ message (STATUS "")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -std=c99 -Wall -Wextra -g")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -g")
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
 	set(CMAKE_C_FLAGS "${CMAKE_CXx_FLAGS} -O2")
@@ -18,6 +18,10 @@ elseif("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
 	set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 endif()
+
+# LY: rpath hint for running with libraries that
+#     we had compiled (or found), but avoids mixing.
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
 
 add_custom_target(build_libs)
 set(ia_libraries "")

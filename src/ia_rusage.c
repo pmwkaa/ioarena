@@ -9,7 +9,7 @@
 
 #include <ioarena.h>
 
-static __thread uint64_t diskusage;
+static __thread uintmax_t diskusage;
 
 static int ftw_diskspace(const char *fpath, const struct stat *sb, int typeflag)
 {
