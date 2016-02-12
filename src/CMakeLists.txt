@@ -61,6 +61,9 @@ add_executable(${ia_binary} ${ia_src})
 add_dependencies(${ia_binary} build_libs)
 
 target_link_libraries(${ia_binary} ${ia_libraries} m "${CMAKE_THREAD_LIBS_INIT}")
+if (NOT APPLE)
+	target_link_libraries(${ia_binary} rt)
+endif(NOT APPLE)
 
 configure_file(
 	"ia_build.h.cmake"
