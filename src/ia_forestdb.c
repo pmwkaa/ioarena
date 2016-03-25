@@ -13,6 +13,7 @@ struct iaprivate {
 	fdb_config config;
 	fdb_kvs_config kvs_config;
 	char *data_filename;
+    bool needsCompact;
 };
 
 struct iacontext {
@@ -23,6 +24,8 @@ struct iacontext {
 	fdb_doc *doc;
 	int transaction;
 };
+
+#define MANUAL_COMPACT
 
 static int ia_forestdb_open(const char *datadir)
 {
@@ -36,14 +39,16 @@ static int ia_forestdb_open(const char *datadir)
 		return -1;
 
 	self->config = fdb_get_default_config();
-	self->config.num_compactor_threads   = 4;
-	self->config.num_wal_partitions      = 31;
-	self->config.num_bcache_partitions   = 31;
 	self->config.seqtree_opt             = FDB_SEQTREE_NOT_USE;
 	self->config.compress_document_body  = false;
-	self->config.purging_interval	     = 1;
-	self->config.compaction_mode         = FDB_COMPACTION_AUTO;
-	self->config.compaction_threshold    = 50;
+#ifdef MANUAL_COMPACT
+    self->config.compaction_mode         = FDB_COMPACTION_MANUAL;
+	self->needsCompact = true;
+#else
+    self->config.compaction_mode         = FDB_COMPACTION_AUTO;
+    self->config.compaction_threshold    = 50;
+    self->config.compactor_sleep_duration = 1; // otherwise compactor won't get time to start
+#endif
 
 	/* LY: suggestions are welcome */
 	switch(ioarena.conf.syncmode) {
@@ -135,7 +140,7 @@ void ia_forestdb_thread_dispose(iacontext *ctx)
 		(void) fdb_abort_transaction(ctx->db);
 	if (ctx->doc)
 		fdb_doc_free(ctx->doc);
-
+        
 	if (ctx->kvs)
 		fdb_kvs_close(ctx->kvs);
 	if (ctx->db)
@@ -149,12 +154,21 @@ static int ia_forestdb_begin(iacontext *ctx, iabenchmark step)
 	fdb_status status;
 	int rc = 0;
 
+    if (ioarena.driver->priv->needsCompact) {
+        // Compact before the first operation after opening the file
+        ioarena.driver->priv->needsCompact = false;
+        status = fdb_compact(ctx->db, NULL);
+    	if (status != FDB_RESULT_SUCCESS)
+			goto bailout;
+    }
+
 	switch(step) {
 	case IA_CRUD:
 		status = fdb_begin_transaction(ctx->db, FDB_ISOLATION_READ_COMMITTED);
 		if (status != FDB_RESULT_SUCCESS)
 			goto bailout;
 		ctx->transaction = 1;
+        break;
 
 	case IA_BATCH:
 	case IA_SET:
@@ -198,6 +212,7 @@ static int ia_forestdb_done(iacontext* ctx, iabenchmark step)
 			if (status != FDB_RESULT_SUCCESS)
 				goto bailout;
 		}
+        break;
 
 	case IA_BATCH:
 	case IA_DELETE:
@@ -205,6 +220,7 @@ static int ia_forestdb_done(iacontext* ctx, iabenchmark step)
 		status = fdb_commit(ctx->db, FDB_COMMIT_NORMAL);
 		if (status != FDB_RESULT_SUCCESS)
 			goto bailout;
+        break;
 
 	case IA_GET:
 		if (ctx->result) {
@@ -250,10 +266,12 @@ static int ia_forestdb_next(iacontext* ctx, iabenchmark step, iakv *kv)
 		if (status != FDB_RESULT_SUCCESS)
 			goto bailout;
 		break;
+		
 	case IA_DELETE:
 		status = fdb_del_kv(ctx->kvs, kv->k, kv->ksize);
 		if (status != FDB_RESULT_SUCCESS)
 			goto bailout;
+        break;
 
 	case IA_GET:
 		if (ctx->result) {
