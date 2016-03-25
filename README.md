@@ -18,7 +18,7 @@ Sync modes: *sync*, *lazy*, *no-sync*
 WAL modes: *indef* (per engine default), *wal-on*, *wal-off*
 
 Supported databases: **rocksdb**, **leveldb**, **forestdb**, **lmdb**,
-**mdbx** (modified lmdb), ~~nessdb~~, **wiredtiger**, **sophia**
+**mdbx** (modified lmdb), **nessdb**, **wiredtiger**, **sophia**
 
 *New drivers or any kind of enhancements are very welcome!*
 
