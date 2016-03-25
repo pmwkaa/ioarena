@@ -19,6 +19,7 @@ mkdir -p $DIR && \
 	-DENABLE_LMDB=ON \
 	-DENABLE_MDBX=ON \
 	-DENABLE_LEVELDB=ON \
+	-DENABLE_NESSDB=ON \
 	) || exit 1
 
 echo "*** run make..."

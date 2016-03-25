@@ -9,119 +9,144 @@
 #include <ioarena.h>
 #include <ness.h>
 
-typedef struct {
-	void *e;
+struct iaprivate {
+	void *env;
 	void *db;
-} ianessdb;
+};
 
-static int ia_nessdb_open(void)
+static int ia_nessdb_open(const char *datadir)
 {
-	iadriver *self = ioarena.driver;
-	self->priv = malloc(sizeof(ianessdb));
-	if (self->priv == NULL)
-		return -1;
-	mkdir(ioarena.conf.path, 0755);
-	char path[1024];
-	snprintf(path, sizeof(path), "%s/%s",
-	         ioarena.conf.path, self->name);
-	mkdir(path, 0755);
-	ianessdb *s = self->priv;
-	memset(s, 0, sizeof(ianessdb));
-
 	char dbname[] = "test.nessdb";
-	s->e = ness_env_open(path, -1);
-	s->db = ness_db_open(s->e, dbname);
+	iadriver *drv = ioarena.driver;
 
-	if (!s->db) {
+	drv->priv = calloc(1, sizeof(iaprivate));
+	if (drv->priv == NULL)
+		return -1;
+
+	iaprivate *self = drv->priv;
+	self->env = ness_env_open(datadir, -1);
+	self->db = ness_db_open(self->env, dbname);
+	if (!self->db) {
 		fprintf(stderr, "open db error, see ness.event for details\n");
-		return 0;
+		goto bailout;
 	}
 
-	if (!ness_env_set_cache_size(s->e, 1024*1024*1024)) {
+	if (!ness_env_set_cache_size(self->env, 1024*1024*1024)) {
 		fprintf(stderr, "set cache size error, see ness.event for details\n");
-		return 0;
+		goto bailout;
 	}
 
 	return 0;
+
+bailout:
+	ia_log("error: %s", __func__);
+	return -1;
 }
+
 
 static int ia_nessdb_close(void)
 {
-	iadriver *self = ioarena.driver;
-	if (self->priv == NULL)
-		return 0;
-	ianessdb *s = self->priv;
-
-	ness_db_close(s->db);
-	ness_env_close(s->e);
-	
-	free(s);
-	return 0;
-}
-
-static inline int
-ia_nessdb_set(void)
-{
-	iadriver *self = ioarena.driver;
-	ianessdb *s = self->priv;
-	uint64_t i = 0;
-	while (i < ioarena.conf.count)
-	{
-		ia_kv(&ioarena.kv);
-		double t0 = ia_histogram_time();
-		int rc = ness_db_set(s->db, ioarena.kv.k, ioarena.kv.ksize, ioarena.kv.v, ioarena.kv.vsize);
-		if (rc != 1) {
-			ia_log("error: nessdb_set(): %d", rc);
-			return -1;
-		}
-		double t1 = ia_histogram_time();
-		double td = t1 - t0;
-		ia_histogram_add(&ioarena.hg, td);
-		ia_histogram_done(&ioarena.hg, i, ioarena.kv.ksize,
-		                  ioarena.kv.vsize);
-		i++;
+	iaprivate *self = ioarena.driver->priv;
+	if (self) {
+		ioarena.driver->priv = NULL;
+		ness_db_close(self->db);
+		ness_env_close(self->env);
+		free(self);
 	}
 	return 0;
 }
 
-static inline int
-ia_nessdb_delete(void)
+static iacontext* ia_nessdb_thread_new(void)
 {
-	ia_log("error: not supported");
-	return -1;
+	iacontext* ctx = calloc(1, sizeof(ctx));
+	return ctx;
 }
 
-static inline int
-ia_nessdb_get(void)
+void ia_nessdb_thread_dispose(iacontext *ctx)
 {
-	ia_log("error: not supported");
-	return -1;
+	free(ctx);
 }
 
-static inline int
-ia_nessdb_iterate(void)
+static int ia_nessdb_begin(iacontext *ctx, iabenchmark step)
 {
-	ia_log("error: not supported");
-	return -1;
-}
+	int rc;
 
-static inline int
-ia_nessdb_batch(void)
-{
-	ia_log("error: not supported");
-	return -1;
-}
+	(void) ctx;
 
-static int ia_nessdb_run(iabenchmark bench)
-{
-	switch (bench) {
-	case IA_SET:         return ia_nessdb_set();
-	case IA_GET:         return ia_nessdb_get();
-	case IA_DELETE:      return ia_nessdb_delete();
-	case IA_ITERATE:     return ia_nessdb_iterate();
-	case IA_BATCH:       return ia_nessdb_batch();
-	default: assert(0);
+	switch(step) {
+	case IA_SET:
+	case IA_BATCH:
+	case IA_CRUD:
+	case IA_DELETE:
+		rc = 0;
+		break;
+
+	case IA_ITERATE:
+	case IA_GET:
+		rc = 0;
+		break;
+
+	default:
+		assert(0);
+		rc = -1;
 	}
+
+	return rc;
+}
+
+static int ia_nessdb_done(iacontext* ctx, iabenchmark step)
+{
+	int rc;
+
+	(void) ctx;
+
+	switch(step) {
+	case IA_SET:
+	case IA_BATCH:
+	case IA_CRUD:
+	case IA_DELETE:
+	case IA_ITERATE:
+	case IA_GET:
+		rc = 0;
+		break;
+
+	default:
+		assert(0);
+		rc = -1;
+	}
+
+	return rc;
+}
+
+static int ia_nessdb_next(iacontext* ctx, iabenchmark step, iakv *kv)
+{
+	int rc;
+
+	(void) ctx;
+	iaprivate *self = ioarena.driver->priv;
+
+	switch(step) {
+	case IA_SET:
+		rc = ness_db_set(self->db, kv->k, kv->ksize, kv->v, kv->vsize);
+		if (rc != 1)
+			goto bailout;
+		rc = 0;
+		break;
+	case IA_DELETE:
+	case IA_ITERATE:
+	case IA_GET:
+		rc = 0;
+		break;
+	default:
+		assert(0);
+		rc = -1;
+	}
+
+	return rc;
+
+bailout:
+	ia_log("error: %s, %s, rc= (%d)", __func__,
+		ia_benchmarkof(step), rc);
 	return -1;
 }
 
@@ -131,5 +156,10 @@ iadriver ia_nessdb =
 	.priv  = NULL,
 	.open  = ia_nessdb_open,
 	.close = ia_nessdb_close,
-	.run   = ia_nessdb_run
+
+	.thread_new = ia_nessdb_thread_new,
+	.thread_dispose = ia_nessdb_thread_dispose,
+	.begin	= ia_nessdb_begin,
+	.next	= ia_nessdb_next,
+	.done	= ia_nessdb_done
 };
