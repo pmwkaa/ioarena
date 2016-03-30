@@ -21,7 +21,7 @@ struct iadoer {
 	int key_space, key_sequence;
 	long benchmask;
 	iacontext *ctx;
-	struct iakvpool pool;
+	struct iakvgen *gen;
 	iahistogram hg;
 };
 

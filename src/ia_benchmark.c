@@ -59,7 +59,7 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 	//ia_log("<< %s.%s-%d", ioarena.conf.driver, name, doer->nth);
 
 	ia_histogram_reset(&doer->hg, bench);
-	ia_kvpool_rewind(&doer->pool);
+	ia_kvgen_rewind(doer->gen);
 
 	for (i = 0; rc == 0 && i < ioarena.conf.count; ) {
 		ia_timestamp_t t0;
@@ -70,10 +70,8 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 		case IA_SET:
 		case IA_DELETE:
 		case IA_GET:
-			if (ia_kvpool_pull(&doer->pool, &a) || ia_kvpool_pull(&doer->pool, &b))
+			if (ia_kvgen_getcouple(doer->gen, &a, NULL, (bench != IA_SET)))
 				goto bailout;
-			if (bench != IA_SET)
-				a.v = b.v = NULL;
 
 			t0 = ia_timestamp_ns();
 			rc = ioarena.driver->begin(doer->ctx, bench);
@@ -95,7 +93,7 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 			break;
 
 		case IA_CRUD:
-			if (ia_kvpool_pull(&doer->pool, &a) || ia_kvpool_pull(&doer->pool, &b))
+			if (ia_kvgen_getcouple(doer->gen, &a, &b, 0))
 				goto bailout;
 			t0 = ia_timestamp_ns();
 			rc = ioarena.driver->begin(doer->ctx, IA_CRUD);
@@ -117,7 +115,7 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 			t0 = ia_timestamp_ns();
 			rc = ioarena.driver->begin(doer->ctx, IA_BATCH);
 			for(j = 0; j < ioarena.conf.batch_length; ++j) {
-				if (ia_kvpool_pull(&doer->pool, &a) || ia_kvpool_pull(&doer->pool, &b))
+				if (ia_kvgen_getcouple(doer->gen, &a, &b, 0))
 					goto bailout;
 				rc = ia_quadruple(doer, &a, &b);
 				if (rc || ++i == ioarena.conf.count)
@@ -218,13 +216,12 @@ int ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_s
 			doer->nth, line, key_space, key_sequence);
 	}
 
-	if (ia_kvpool_init(&doer->pool, !ioarena.conf.binary, ioarena.conf.ksize, ioarena.conf.vsize,
+	if (ia_kvgen_init(&doer->gen, !ioarena.conf.binary, ioarena.conf.ksize, ioarena.conf.vsize,
 			doer->key_space, doer->key_sequence, ioarena.conf.count)) {
 		ia_log("doer.%d: key-value generator failed, the options are correct?", doer->nth);
 		return -1;
 	}
 
-	ia_kvpool_fill(&doer->pool, ioarena.conf.count, 2);
 	ia_histogram_init(&doer->hg);
 	__sync_fetch_and_add(&ioarena.doers_count, 1);
 	return 0;
@@ -234,5 +231,5 @@ void ia_doer_destroy(iadoer *doer)
 {
 	__sync_fetch_and_add(&ioarena.doers_count, -1);
 	ia_histogram_destroy(&doer->hg);
-	ia_kvpool_destory(&doer->pool);
+	ia_kvgen_destory(&doer->gen);
 }

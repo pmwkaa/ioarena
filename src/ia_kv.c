@@ -15,23 +15,22 @@
 #	define DEBUG_KEYGEN 0
 #endif
 
+struct iakvgen {
+	uintmax_t base, serial, period;
+	unsigned ksize, vsize;
+	char printable;
+	char buf[];
+};
+
 #define ALPHABET_CARDINALITY 62 /* 10 + 26 + 26 */
 static const unsigned char alphabet[ALPHABET_CARDINALITY] =
 	"0123456789"
 	"abcdefghijklmnopqrstuvwxyz"
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-int ia_kvpool_init(struct iakvpool *pool, char printable, unsigned ksize, unsigned vsize, unsigned key_sector, unsigned key_sequence, uintmax_t period)
+int ia_kvgen_init(struct iakvgen **genptr, char printable, unsigned ksize, unsigned vsize, unsigned key_sector, unsigned key_sequence, uintmax_t period)
 {
-	pool->base = (key_sector % 257) * period;
-	pool->serial = key_sequence % period;
-	pool->period = period;
-
-	pool->ksize = ksize;
-	pool->vsize = vsize;
-	pool->pos = 0;
-	pool->power = 0;
-	pool->flat = NULL;
+	*genptr = NULL;
 
 	double maxkey = (double) key_sector * (double) period + (double) (period - 1);
 	if (maxkey > UINT64_MAX) {
@@ -47,43 +46,43 @@ int ia_kvpool_init(struct iakvpool *pool, char printable, unsigned ksize, unsign
 
 	double bytes2maxkey = log(maxkey) / log(printable ? ALPHABET_CARDINALITY : 256 );
 	if (bytes2maxkey > (double) ksize) {
-		ia_log("key-pool: key-length %u is insufficient for %u sector of %s %ju items, at least %d required",
+		ia_log("key-gen: key-length %u is insufficient for %u sector of %s %ju items, at least %d required",
 			ksize, key_sector, printable ? "printable" : "binary", period, (int) ceil(bytes2maxkey));
 		return -1;
 	}
 
+	int bufsize = ksize + vsize;
+	if (printable)
+		bufsize += 2;
+
+	struct iakvgen *gen = calloc(1, sizeof(struct iakvgen) + bufsize * 2);
+	if (!gen)
+		return -1;
+
+	gen->base = key_sector * period;
+	gen->serial = key_sequence % period;
+	gen->period = period;
+	gen->ksize = ksize;
+	gen->vsize = vsize;
+	gen->printable = printable;
+
+	*genptr = gen;
 	return 0;
 }
 
-void ia_kvpool_destory(struct iakvpool *pool)
+void ia_kvgen_destory(struct iakvgen **genptr)
 {
-	free(pool->flat);
-	pool->pos = 0;
-	pool->power = 0;
-	pool->flat = NULL;
+	struct iakvgen *gen = *genptr;
+	if (gen) {
+		free(gen);
+		*genptr = NULL;
+	}
 }
 
 static
-char* kv_rnd(uintmax_t *point, char* dst, char printable, int length)
+char* kv_rnd(uintmax_t point, char* dst, char printable, int length)
 {
-	uintmax_t gen = *point;
-
-#if DEBUG_KEYGEN
-	(void) printable;
-
-	dst += length;
-	char *p = dst;
-
-	*--p = 0;
-	while(--length >= 1) {
-		unsigned v = gen % 10;
-		gen /= 10;
-		*--p = v + '0';
-	}
-
-	*point = *point * 6364136223846793005ull + 1442695040888963407ull;
-
-#else
+	uintmax_t gen = point;
 
 	while(--length >= printable) {
 		gen = gen * 6364136223846793005ull + 1442695040888963407ull;
@@ -93,65 +92,38 @@ char* kv_rnd(uintmax_t *point, char* dst, char printable, int length)
 
 	if (printable)
 		*dst++ = 0;
-	*point = gen;
-
-#endif
+	point = gen;
 
 	return dst;
 }
 
-void ia_kvpool_fill(struct iakvpool *pool, size_t nbandles, size_t nelem)
+int ia_kvgen_getcouple(struct iakvgen *gen, iakv *a, iakv *b, char key_only)
 {
-	size_t i, j, bytes = nbandles * nelem * (pool->vsize + pool->ksize);
-	char* dst = realloc(pool->flat, bytes);
-	if (! dst) {
-		ia_log("error: out of memory");
-		ia_fatal(__func__);
+	char* dst = gen->buf;
+
+	if (a) {
+		uintmax_t point = gen->base + gen->serial;
+		dst = kv_rnd(point, a->k = dst, gen->printable, a->ksize = gen->ksize);
+		a->vsize = 0;
+		a->v = NULL;
+		if (! key_only)
+			dst = kv_rnd(point + (1ul << 47), a->v = dst, gen->printable, a->vsize = gen->vsize);
 	}
 
-	pool->flat = dst;
-	for (i = 0; i < nbandles; ++i) {
-		uintmax_t point = pool->base + pool->serial;
-		pool->serial = (pool->serial + 1) % pool->period;
-
-		for (j = 0; j < nelem; ++j) {
-			dst = kv_rnd(&point, dst, !ioarena.conf.binary, pool->ksize);
-			if (pool->vsize)
-				dst = kv_rnd(&point, dst, !ioarena.conf.binary, pool->vsize);
-		}
+	if (b) {
+		uintmax_t point = gen->base + (gen->serial + 1) % gen->period;
+		dst = kv_rnd(point, b->k = dst, gen->printable, b->ksize = gen->ksize);
+		b->vsize = 0;
+		b->v = NULL;
+		if (! key_only)
+			dst = kv_rnd(point + (1ul << 47), b->v = dst, gen->printable, b->vsize = gen->vsize);
 	}
 
-	assert(dst == pool->flat + bytes);
-	pool->pos = 0;
-	pool->power = bytes;
-}
-
-int ia_kvpool_pull(struct iakvpool *pool, iakv* one)
-{
-	if (pool->power - pool->pos < pool->ksize + pool->vsize) {
-		if (pool->power < pool->ksize + pool->vsize)
-			return -1;
-		pool->pos = 0;
-	}
-
-	one->k = pool->flat + pool->pos;
-	one->ksize = pool->ksize;
-	pool->pos += pool->ksize;
-
-	one->v = pool->flat + pool->pos;
-	one->vsize = pool->vsize;
-	pool->pos += pool->vsize;
-
-	if (!ioarena.conf.binary) {
-		if (one->vsize)
-			assert(one->v[one->vsize - 1] == 0);
-		assert(one->k[one->ksize - 1] == 0);
-	}
-
+	gen->serial = (gen->serial + 2) % gen->period;
 	return 0;
 }
 
-void ia_kvpool_rewind(struct iakvpool *pool)
+void ia_kvgen_rewind(struct iakvgen *gen)
 {
-	pool->pos = 0;
+	gen->serial = 0;
 }

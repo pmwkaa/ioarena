@@ -16,17 +16,11 @@ struct iakv {
 	char *k, *v;
 };
 
-struct iakvpool {
-	uintmax_t base, serial, period;
-	size_t pos, power;
-	unsigned ksize, vsize;
-	char* flat;
-};
+struct iakvgen;
 
-int ia_kvpool_init(struct iakvpool *pool, char printable, unsigned ksize, unsigned vsize, unsigned key_sector, unsigned key_sequence, uintmax_t period);
-void ia_kvpool_destory(struct iakvpool *pool);
-void ia_kvpool_fill(struct iakvpool *pool, size_t nbandles, size_t nelem);
-int ia_kvpool_pull(struct iakvpool *pool, iakv* one);
-void ia_kvpool_rewind(struct iakvpool *pool);
+int ia_kvgen_init(struct iakvgen **genptr, char printable, unsigned ksize, unsigned vsize, unsigned key_sector, unsigned key_sequence, uintmax_t period);
+void ia_kvgen_destory(struct iakvgen **genptr);
+int ia_kvgen_getcouple(struct iakvgen *gen, iakv *a, iakv *b, char key_only);
+void ia_kvgen_rewind(struct iakvgen *gen);
 
 #endif /* IA_KV_H_ */
