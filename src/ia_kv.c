@@ -158,7 +158,7 @@ static char* kv_rnd(uint64_t *point, char* dst, char printable, int length, int 
 	} else {
 		uint64_t *p = (void *) dst;
 		for(;;) {
-			*p++ = *point;
+			*p++ = htole64(*point);
 			length -= 8;
 			if (length <= 0)
 				break;
