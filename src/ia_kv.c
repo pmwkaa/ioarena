@@ -53,9 +53,12 @@ int ia_kvgen_init(struct iakvgen **genptr, char printable, unsigned ksize, unsig
 		return -1;
 	}
 
-	int bufsize = ksize + vsize;
-	if (printable)
-		bufsize += 2;
+	size_t bufsize;
+	if (printable) {
+		bufsize = ksize + vsize + 2;
+	} else {
+		bufsize = ((ksize + 7) & ~7ul) + ((vsize + 7) & ~7ul);
+	}
 
 	struct iakvgen *gen = calloc(1, sizeof(struct iakvgen) + bufsize * 2);
 	if (!gen)
@@ -81,37 +84,53 @@ void ia_kvgen_destory(struct iakvgen **genptr)
 	}
 }
 
+static __inline uint64_t mixup4initial(uint64_t point)
+{
+	/* LY: Linear congruential 2^64 by Donald Knuth */
+	return point * 6364136223846793005ull + 1442695040888963407ull;
+}
+
+static __inline uint64_t remix4tail(uint64_t point)
+{
+	/* LY: fast and dirty remix */
+	return point ^ (((point << 47) | (point >> 17)) + 250297178449537ull);
+}
+
 static
 char* kv_rnd(uint64_t point, char* dst, char printable, int length)
 {
-	point = point * 6364136223846793005ull + 1442695040888963407ull;
-	int left = 64;
-	uint64_t gen = point;
+	assert(length > 0);
+	point = mixup4initial(point);
 
-	while(--length >= printable) {
-		unsigned v;
-		if (printable) {
-			assert(ALPHABET_CARDINALITY == 64);
-			v = alphabet[gen & 63];
-			gen >>= 6;
+	if (printable) {
+		int left = 64;
+		uint64_t acc = point;
+		assert(ALPHABET_CARDINALITY == 64);
+
+		for(;;) {
+			*dst++ = alphabet[acc & 63];
+			if (--length == 0)
+				break;
+			acc >>= 6;
 			left -= 6;
-		} else {
-			v = (char) gen;
-			gen >>= 8;
-			left -= 8;
+			if (left <= 0) {
+				point = remix4tail(point);
+				acc = point;
+				left = 64;
+			}
 		}
-		*dst++ = v;
-
-		if (left <= 0) {
-			point ^= ((point << 47) | (point >> 17)) + 250297178449537ul;
-			gen = point;
-			left = 64;
-		}
-	}
-
-	if (printable)
 		*dst++ = 0;
-	point = gen;
+	} else {
+		uint64_t *p = (void *) dst;
+		for(;;) {
+			*p++ = point;
+			length -= 8;
+			if (length <= 0)
+				break;
+			point = remix4tail(point);
+		}
+		dst = (void *) p;
+	}
 
 	return dst;
 }
@@ -119,6 +138,9 @@ char* kv_rnd(uint64_t point, char* dst, char printable, int length)
 int ia_kvgen_getcouple(struct iakvgen *gen, iakv *a, iakv *b, char key_only)
 {
 	char* dst = gen->buf;
+
+	if (! gen->vsize)
+		key_only = 1;
 
 	if (a) {
 		uintmax_t point = gen->base + gen->serial;
