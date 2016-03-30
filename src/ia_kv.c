@@ -17,7 +17,8 @@
 
 struct iakvgen {
 	uintmax_t base, serial, period;
-	unsigned ksize, vsize;
+	unsigned ksize, vsize, width;
+	uint64_t m, a, c;
 	char printable;
 	char buf[];
 };
@@ -44,9 +45,14 @@ int ia_kvgen_init(struct iakvgen **genptr, char printable, unsigned ksize, unsig
 
 	/* LY: currently a 64-bit congruential mixup is used only (see below),
 	 * therefore we always need space for a 64-bit keys */
-	maxkey = UINT64_MAX;
+	uint64_t top = UINT64_MAX;
+	unsigned width = 8;
+	while (0 /* TODO */ && width && (top >> 8) >= maxkey) {
+		width -= 1;
+		top >>= 8;
+	}
 
-	double bytes2maxkey = log(maxkey) / log(printable ? ALPHABET_CARDINALITY : 256 );
+	double bytes2maxkey = log(top) / log(printable ? ALPHABET_CARDINALITY : 256);
 	if (bytes2maxkey > (double) ksize) {
 		ia_log("key-gen: key-length %u is insufficient for %u sector of %s %ju items, at least %d required",
 			ksize, key_sector, printable ? "printable" : "binary", period, (int) ceil(bytes2maxkey));
@@ -71,6 +77,24 @@ int ia_kvgen_init(struct iakvgen **genptr, char printable, unsigned ksize, unsig
 	gen->vsize = vsize;
 	gen->printable = printable;
 
+	gen->width = width;
+	gen->m = top;
+
+	switch (width) {
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+		assert(false);
+	case 8:
+		/* LY: Linear congruential 2^64 by Donald Knuth */
+		gen->a = 6364136223846793005ull;
+		gen->c = 1442695040888963407ull;
+	}
+
 	*genptr = gen;
 	return 0;
 }
@@ -84,10 +108,10 @@ void ia_kvgen_destory(struct iakvgen **genptr)
 	}
 }
 
-static __inline uint64_t mixup4initial(uint64_t point)
+static __inline uint64_t mixup4initial(uint64_t point, struct iakvgen *gen)
 {
-	/* LY: Linear congruential 2^64 by Donald Knuth */
-	return point * 6364136223846793005ull + 1442695040888963407ull;
+	/* LY: mixup by linear congruential */
+	return (point * gen->a + gen->c) & gen->m;
 }
 
 static __inline uint64_t remix4tail(uint64_t point)
@@ -96,16 +120,13 @@ static __inline uint64_t remix4tail(uint64_t point)
 	return point ^ (((point << 47) | (point >> 17)) + 250297178449537ull);
 }
 
-static
-char* kv_rnd(uint64_t point, char* dst, char printable, int length)
+static char* kv_rnd(uint64_t *point, char* dst, char printable, int length, int left)
 {
 	assert(length > 0);
-	point = mixup4initial(point);
 
 	if (printable) {
-		int left = 64;
-		uint64_t acc = point;
 		assert(ALPHABET_CARDINALITY == 64);
+		uint64_t acc = *point;
 
 		for(;;) {
 			*dst++ = alphabet[acc & 63];
@@ -114,8 +135,8 @@ char* kv_rnd(uint64_t point, char* dst, char printable, int length)
 			acc >>= 6;
 			left -= 6;
 			if (left <= 0) {
-				point = remix4tail(point);
-				acc = point;
+				*point = remix4tail(*point);
+				acc = *point;
 				left = 64;
 			}
 		}
@@ -123,15 +144,28 @@ char* kv_rnd(uint64_t point, char* dst, char printable, int length)
 	} else {
 		uint64_t *p = (void *) dst;
 		for(;;) {
-			*p++ = point;
+			*p++ = *point;
 			length -= 8;
 			if (length <= 0)
 				break;
-			point = remix4tail(point);
+			*point = remix4tail(*point);
 		}
 		dst = (void *) p;
 	}
 
+	return dst;
+}
+
+static char* ia_kvgen_get(struct iakvgen *gen, iakv *p, char key_only, uint64_t shift, char* dst)
+{
+	uint64_t point = mixup4initial(gen->base + shift, gen);
+	dst = kv_rnd(&point, p->k = dst, gen->printable, p->ksize = gen->ksize, gen->width * 8);
+	p->vsize = 0;
+	p->v = NULL;
+	if (! key_only) {
+		point = remix4tail(point);
+		dst = kv_rnd(&point, p->v = dst, gen->printable, p->vsize = gen->vsize, 64);
+	}
 	return dst;
 }
 
@@ -142,23 +176,11 @@ int ia_kvgen_getcouple(struct iakvgen *gen, iakv *a, iakv *b, char key_only)
 	if (! gen->vsize)
 		key_only = 1;
 
-	if (a) {
-		uintmax_t point = gen->base + gen->serial;
-		dst = kv_rnd(point, a->k = dst, gen->printable, a->ksize = gen->ksize);
-		a->vsize = 0;
-		a->v = NULL;
-		if (! key_only)
-			dst = kv_rnd(point + (1ul << 47), a->v = dst, gen->printable, a->vsize = gen->vsize);
-	}
+	if (a)
+		dst = ia_kvgen_get(gen, a, key_only, gen->serial, dst);
 
-	if (b) {
-		uintmax_t point = gen->base + (gen->serial + 1) % gen->period;
-		dst = kv_rnd(point, b->k = dst, gen->printable, b->ksize = gen->ksize);
-		b->vsize = 0;
-		b->v = NULL;
-		if (! key_only)
-			dst = kv_rnd(point + (1ul << 47), b->v = dst, gen->printable, b->vsize = gen->vsize);
-	}
+	if (b)
+		dst = ia_kvgen_get(gen, b, key_only, (gen->serial + 1) % gen->period, dst);
 
 	gen->serial = (gen->serial + 2) % gen->period;
 	return 0;
