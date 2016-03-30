@@ -31,25 +31,50 @@ static const unsigned char alphabet[ALPHABET_CARDINALITY] =
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	"_";
 
+#define BITMASK(n) ((1ull << (n)) - 1)
+
 int ia_kvgen_init(struct iakvgen **genptr, char printable, unsigned ksize, unsigned vsize, unsigned key_sector, unsigned key_sequence, uintmax_t period)
 {
 	*genptr = NULL;
+	uint64_t top, a, c;
+	unsigned width;
 
-	double maxkey = (double) key_sector * (double) period + (double) (period - 1);
-	if (maxkey > UINT64_MAX) {
+	double maxkey = (double) key_sector * (double) period + (double) period;
+	if (maxkey <= BITMASK(24)) {
+		width = 24/8;
+		top = BITMASK(24);
+		a = 1140671485ul;
+		c = 12820163ul;
+	} else if (maxkey <= BITMASK(32)) {
+		width = 32/8;
+		top = BITMASK(32);
+		a = 1664525ul;
+		c = 1013904223ul;
+	} else if (maxkey <= BITMASK(40)) {
+		width = 40/8;
+		top = BITMASK(40);
+		a = 330169576829ull;
+		c = 7036301ul;
+	} else if (maxkey <= BITMASK(48)) {
+		width = 48/8;
+		top = BITMASK(48);
+		a = 25214903917ull;
+		c = 7522741ul;
+	/* } else if (maxkey <= BITMASK(56)) {
+		width = 56/8;
+		top = BITMASK(56);
+		a = ?;
+		c = ?; */
+	} else if (maxkey <= UINT64_MAX) {
+		width = 64/8;
+		top = UINT64_MAX;
+		a = 6364136223846793005ull;
+		c = 1442695040888963407ull;
+	} else {
 		double width = log(maxkey) / log(2);
 		ia_log("key-gen: %u sector of %ju items is too huge, unable provide by %u-bit arithmetics, at least %d required",
 			key_sector, period, (unsigned) sizeof(uintmax_t) * 8, (int) ceil(width));
 		return -1;
-	}
-
-	/* LY: currently a 64-bit congruential mixup is used only (see below),
-	 * therefore we always need space for a 64-bit keys */
-	uint64_t top = UINT64_MAX;
-	unsigned width = 8;
-	while (0 /* TODO */ && width && (top >> 8) >= maxkey) {
-		width -= 1;
-		top >>= 8;
 	}
 
 	double bytes2maxkey = log(top) / log(printable ? ALPHABET_CARDINALITY : 256);
@@ -79,21 +104,10 @@ int ia_kvgen_init(struct iakvgen **genptr, char printable, unsigned ksize, unsig
 
 	gen->width = width;
 	gen->m = top;
+	gen->a = a;
+	gen->c = c;
 
-	switch (width) {
-	case 1:
-	case 2:
-	case 3:
-	case 4:
-	case 5:
-	case 6:
-	case 7:
-		assert(false);
-	case 8:
-		/* LY: Linear congruential 2^64 by Donald Knuth */
-		gen->a = 6364136223846793005ull;
-		gen->c = 1442695040888963407ull;
-	}
+	ia_log("key-gen: use a=%ju, c=%ju, m=2^%u up to %.0lf keys", a, c, width*8, maxkey);
 
 	*genptr = gen;
 	return 0;
