@@ -22,11 +22,13 @@ struct iakvgen {
 	char buf[];
 };
 
-#define ALPHABET_CARDINALITY 62 /* 10 + 26 + 26 */
+#define ALPHABET_CARDINALITY 64 /* 2 + 10 + 26 + 26 */
 static const unsigned char alphabet[ALPHABET_CARDINALITY] =
+	"@"
 	"0123456789"
 	"abcdefghijklmnopqrstuvwxyz"
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	"_";
 
 int ia_kvgen_init(struct iakvgen **genptr, char printable, unsigned ksize, unsigned vsize, unsigned key_sector, unsigned key_sequence, uintmax_t period)
 {
@@ -80,14 +82,31 @@ void ia_kvgen_destory(struct iakvgen **genptr)
 }
 
 static
-char* kv_rnd(uintmax_t point, char* dst, char printable, int length)
+char* kv_rnd(uint64_t point, char* dst, char printable, int length)
 {
-	uintmax_t gen = point;
+	point = point * 6364136223846793005ull + 1442695040888963407ull;
+	int left = 64;
+	uint64_t gen = point;
 
 	while(--length >= printable) {
-		gen = gen * 6364136223846793005ull + 1442695040888963407ull;
-		unsigned v = printable ? alphabet[gen % 61u] : gen % 65537u;
+		unsigned v;
+		if (printable) {
+			assert(ALPHABET_CARDINALITY == 64);
+			v = alphabet[gen & 63];
+			gen >>= 6;
+			left -= 6;
+		} else {
+			v = (char) gen;
+			gen >>= 8;
+			left -= 8;
+		}
 		*dst++ = v;
+
+		if (left <= 0) {
+			point ^= ((point << 47) | (point >> 17)) + 250297178449537ul;
+			gen = point;
+			left = 64;
+		}
 	}
 
 	if (printable)
