@@ -93,7 +93,7 @@ static int ia_sophia_open(const char *datadir)
 bailout:
 	error = sp_getstring(self->env, "sophia.error", 0);
 	ia_log("error: %s, %s (%d)", __func__,
-		error, sp_getint(self->env, "sophia.error"));
+		error, (int) sp_getint(self->env, "sophia.error"));
 	free(error);
 	return -1;
 }
@@ -170,7 +170,7 @@ static int ia_sophia_begin(iacontext *ctx, iabenchmark step)
 bailout:
 	error = sp_getstring(self->env, "sophia.error", 0);
 	ia_log("error: %s, %s, %s (%d)", __func__,
-		ia_benchmarkof(step), error, sp_getint(self->env, "sophia.error"));
+		ia_benchmarkof(step), error, (int) sp_getint(self->env, "sophia.error"));
 	free(error);
 	return -1;
 }
@@ -222,7 +222,7 @@ static int ia_sophia_done(iacontext* ctx, iabenchmark step)
 bailout:
 	error = sp_getstring(self->env, "sophia.error", 0);
 	ia_log("error: %s, %s, %s (%d)", __func__,
-		ia_benchmarkof(step), error, sp_getint(self->env, "sophia.error"));
+		ia_benchmarkof(step), error, (int) sp_getint(self->env, "sophia.error"));
 	free(error);
 	return -1;
 }
@@ -314,7 +314,7 @@ bailout:
 	error = sp_getstring(self->env, "sophia.error", 0);
 error_done:
 	ia_log("error: %s, %s, %s (%d)", __func__,
-		ia_benchmarkof(step), error, sp_getint(self->env, "sophia.error"));
+		ia_benchmarkof(step), error, (int) sp_getint(self->env, "sophia.error"));
 	free(error);
 	return -1;
 }
