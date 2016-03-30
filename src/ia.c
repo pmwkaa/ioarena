@@ -117,7 +117,8 @@ static int ia_spread(int count, int *nth, long *rotator, long set, int *key_spac
 			*key_space += 1;
 
 		*nth += 1;
-		ia_doer_init(doer, *nth, mask, *key_space, *nth);
+		if (ia_doer_init(doer, *nth, mask, *key_space, *nth))
+			return -1;
 
 		pthread_t thread;
 		int rc = pthread_create(&thread, NULL, ia_doer_thread, doer);
@@ -179,7 +180,8 @@ int ia_run(ia *a)
 	iarusage rusage_start, rusage_fihish;
 	if (set_wr | set_rd) {
 		iadoer here;
-		ia_doer_init(&here, 0, set_wr | set_rd, 0, 0);
+		if (ia_doer_init(&here, 0, set_wr | set_rd, 0, 0))
+			goto bailout;
 
 		rc = ia_get_rusage(&rusage_start, a->datadir);
 		if (rc)

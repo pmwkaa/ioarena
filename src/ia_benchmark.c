@@ -195,7 +195,7 @@ int ia_doer_fulfil(iadoer *doer)
 	return rc;
 }
 
-void ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_sequence)
+int ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_sequence)
 {
 	assert(benchmask);
 	doer->ctx = NULL;
@@ -218,10 +218,16 @@ void ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_
 			doer->nth, line, key_space, key_sequence);
 	}
 
-	ia_kvpool_init(&doer->pool, ioarena.conf.ksize, ioarena.conf.vsize, doer->key_space, doer->key_sequence, ioarena.conf.count);
+	if (ia_kvpool_init(&doer->pool, !ioarena.conf.binary, ioarena.conf.ksize, ioarena.conf.vsize,
+			doer->key_space, doer->key_sequence, ioarena.conf.count)) {
+		ia_log("doer.%d: key-value generator failed, the options are correct?", doer->nth);
+		return -1;
+	}
+
 	ia_kvpool_fill(&doer->pool, ioarena.conf.count, 2);
 	ia_histogram_init(&doer->hg);
 	__sync_fetch_and_add(&ioarena.doers_count, 1);
+	return 0;
 }
 
 void ia_doer_destroy(iadoer *doer)

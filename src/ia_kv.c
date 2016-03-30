@@ -7,6 +7,7 @@
 */
 
 #include <ioarena.h>
+#include <math.h>
 
 #define DEBUG_KEYGEN 0
 
@@ -14,9 +15,15 @@
 #	define DEBUG_KEYGEN 0
 #endif
 
-void ia_kvpool_init(struct iakvpool *pool, int ksize, int vsize, int key_space, int key_sequence, uintmax_t period)
+#define ALPHABET_CARDINALITY 62 /* 10 + 26 + 26 */
+static const unsigned char alphabet[ALPHABET_CARDINALITY] =
+	"0123456789"
+	"abcdefghijklmnopqrstuvwxyz"
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+int ia_kvpool_init(struct iakvpool *pool, char printable, unsigned ksize, unsigned vsize, unsigned key_sector, unsigned key_sequence, uintmax_t period)
 {
-	pool->space = (key_space % 257) * period;
+	pool->base = (key_sector % 257) * period;
 	pool->serial = key_sequence % period;
 	pool->period = period;
 
@@ -25,6 +32,27 @@ void ia_kvpool_init(struct iakvpool *pool, int ksize, int vsize, int key_space, 
 	pool->pos = 0;
 	pool->power = 0;
 	pool->flat = NULL;
+
+	double maxkey = (double) key_sector * (double) period + (double) (period - 1);
+	if (maxkey > UINT64_MAX) {
+		double width = log(maxkey) / log(2);
+		ia_log("key-gen: %u sector of %ju items is too huge, unable provide by %u-bit arithmetics, at least %d required",
+			key_sector, period, (unsigned) sizeof(uintmax_t) * 8, (int) ceil(width));
+		return -1;
+	}
+
+	/* LY: currently a 64-bit congruential mixup is used only (see below),
+	 * therefore we always need space for a 64-bit keys */
+	maxkey = UINT64_MAX;
+
+	double bytes2maxkey = log(maxkey) / log(printable ? ALPHABET_CARDINALITY : 256 );
+	if (bytes2maxkey > (double) ksize) {
+		ia_log("key-pool: key-length %u is insufficient for %u sector of %s %ju items, at least %d required",
+			ksize, key_sector, printable ? "printable" : "binary", period, (int) ceil(bytes2maxkey));
+		return -1;
+	}
+
+	return 0;
 }
 
 void ia_kvpool_destory(struct iakvpool *pool)
@@ -57,11 +85,6 @@ char* kv_rnd(uintmax_t *point, char* dst, char printable, int length)
 
 #else
 
-	const unsigned char alphabet[] =
-		"0123456789"
-		"abcdefghijklmnopqrstuvwxyz"
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
 	while(--length >= printable) {
 		gen = gen * 6364136223846793005ull + 1442695040888963407ull;
 		unsigned v = printable ? alphabet[gen % 61u] : gen % 65537u;
@@ -88,7 +111,7 @@ void ia_kvpool_fill(struct iakvpool *pool, size_t nbandles, size_t nelem)
 
 	pool->flat = dst;
 	for (i = 0; i < nbandles; ++i) {
-		uintmax_t point = pool->space + pool->serial;
+		uintmax_t point = pool->base + pool->serial;
 		pool->serial = (pool->serial + 1) % pool->period;
 
 		for (j = 0; j < nelem; ++j) {

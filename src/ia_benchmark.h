@@ -25,7 +25,7 @@ struct iadoer {
 	iahistogram hg;
 };
 
-void ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_sequence);
+int ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_sequence);
 int ia_doer_fulfil(iadoer *doer);
 void ia_doer_destroy(iadoer *doer);
 

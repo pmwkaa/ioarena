@@ -17,13 +17,13 @@ struct iakv {
 };
 
 struct iakvpool {
-	uintmax_t space, serial, period;
+	uintmax_t base, serial, period;
 	size_t pos, power;
 	unsigned ksize, vsize;
 	char* flat;
 };
 
-void ia_kvpool_init(struct iakvpool *pool, int ksize, int vsize, int key_space, int key_sequence, uintmax_t period);
+int ia_kvpool_init(struct iakvpool *pool, char printable, unsigned ksize, unsigned vsize, unsigned key_sector, unsigned key_sequence, uintmax_t period);
 void ia_kvpool_destory(struct iakvpool *pool);
 void ia_kvpool_fill(struct iakvpool *pool, size_t nbandles, size_t nelem);
 int ia_kvpool_pull(struct iakvpool *pool, iakv* one);
