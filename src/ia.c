@@ -19,8 +19,7 @@ int ia_init(ia *a, int argc, char **argv)
 {
 	int rc;
 
-	ia_log("IOARENA (embedded storage benchmarking)");
-	ia_log("");
+	ia_log("IOARENA (embedded storage benchmarking)\n");
 
 	rc = ia_configinit(&a->conf);
 	if (rc == -1)
@@ -29,7 +28,6 @@ int ia_init(ia *a, int argc, char **argv)
 	if (rc == -1 || rc == 1)
 		return rc;
 	ia_configprint(&a->conf);
-	ia_log("");
 	a->driver = a->conf.driver_if;
 
 	mkdir(ioarena.conf.path, 0755);

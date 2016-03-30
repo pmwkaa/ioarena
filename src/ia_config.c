@@ -109,7 +109,7 @@ ia_configusage(iaconfig *c)
 	ia_log("     choices: indef, walon, waloff");
 	ia_log("  -C <name-prefix> generate csv      (default: %s)", c->csv_prefix );
 	ia_log("  -p <path> for temporaries          (default: %s)", c->path);
-	ia_log("  -n <number_of_operations>          (default: %d)", c->count);
+	ia_log("  -n <number_of_operations>          (default: %ju)", c->count);
 	ia_log("  -k <key_size>                      (default: %d)", c->ksize);
 	ia_log("  -v <value_size>                    (default: %d)", c->vsize);
 	ia_log("  -c continuous completing mode      (default: %s)", c->continuous_completing ? "yes" : "no");
@@ -119,8 +119,8 @@ ia_configusage(iaconfig *c)
 	ia_log("     `zero` to use single main/common thread");
 	ia_log("  -i ignore key-not-found error      (default: %s)", c->ignore_keynotfound ? "yes" : "no");
 	ia_log("  -h                                 help");
-	ia_log("");
-	ia_log("example:");
+
+	ia_log("\nexample:");
 	ia_log("   ioarena -m sync -D sophia -B crud -n 100000000");
 }
 
@@ -251,7 +251,7 @@ void ia_configprint(iaconfig *c)
 	ia_log("  benchmark    = %s", c->benchmark);
 	ia_log("  durability   = %s", ia_syncmode2str(c->syncmode));
 	ia_log("  wal          = %s", ia_walmode2str(c->walmode));
-	ia_log("  operations   = %"PRIu64, c->count);
+	ia_log("  operations   = %ju", c->count);
 	ia_log("  key size     = %d", c->ksize);
 	ia_log("  value size   = %d", c->vsize);
 	ia_log("  binary       = %s", c->binary ? "yes" : "no");
@@ -260,7 +260,7 @@ void ia_configprint(iaconfig *c)
 	if (c->wthr)
 		ia_log("  w-threads    = %d", c->wthr);
 	ia_log("  batch length = %d", c->batch_length);
-	ia_log("  continuous   = %s", c->continuous_completing ? "yes" : "no");
+	ia_log("  continuous   = %s\n", c->continuous_completing ? "yes" : "no");
 }
 
 const char*
