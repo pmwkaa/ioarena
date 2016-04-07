@@ -25,6 +25,7 @@ struct iaconfig {
 	int wthr;
 	int batch_length;
 	int nrepeat;
+	int kvseed;
 	const char *csv_prefix;
 	char binary;
 	char separate;
