@@ -9,7 +9,7 @@
 #include <ioarena.h>
 #include <math.h>
 
-#define DEBUG_KEYGEN 0
+/* #define DEBUG_KEYGEN 1 */
 
 #ifndef DEBUG_KEYGEN
 #	define DEBUG_KEYGEN 0
@@ -36,7 +36,7 @@ static struct {
 	unsigned ksize, width, nsectors;
 	uint64_t period;
 } kv_globals = {
-	DEBUG_KEYGEN
+	.debug = DEBUG_KEYGEN,
 };
 
 int ia_kvgen_setup(char printable, unsigned ksize, unsigned nspaces, unsigned nsectors, uintmax_t period, int seed)
@@ -109,7 +109,11 @@ int ia_kvgen_init(struct ia_kvgen **genptr, unsigned kspace, unsigned ksector, u
 		return -1;
 
 	gen->base = kspace * kv_globals.period;
-	gen->serial = ksector ? (kv_globals.period * (double) ksector / kv_globals.nsectors) : 0;
+	gen->serial = 0;
+	if (ksector) {
+		gen->serial = kv_globals.period * (double) ksector / kv_globals.nsectors;
+		gen->serial %= kv_globals.period;
+	}
 	gen->vsize = vsize;
 	gen->vage = vage;
 	gen->pair_bytes = pair_size;
