@@ -219,6 +219,7 @@ static int ia_mdbx_done(iacontext* ctx, iabenchmark step)
 		rc = mdbx_txn_commit(ctx->txn);
 		if (rc != MDB_SUCCESS) {
 			mdbx_txn_abort(ctx->txn);
+			ctx->txn = NULL;
 			goto bailout;
 		}
 		ctx->txn = NULL;

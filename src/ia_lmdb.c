@@ -210,6 +210,7 @@ static int ia_lmdb_done(iacontext* ctx, iabenchmark step)
 		rc = mdb_txn_commit(ctx->txn);
 		if (rc != MDB_SUCCESS) {
 			mdb_txn_abort(ctx->txn);
+			ctx->txn = NULL;
 			goto bailout;
 		}
 		ctx->txn = NULL;
