@@ -67,7 +67,7 @@ static int ia_lmdb_open(const char *datadir)
 		return -1;
 	}
 
-	rc = mdb_env_open(self->env, datadir, MDB_CREATE|modeflags|MDB_NORDAHEAD, 0644);
+	rc = mdb_env_open(self->env, datadir, modeflags|MDB_NORDAHEAD, 0644);
 	if (rc != MDB_SUCCESS)
 		goto bailout;
 	return 0;
