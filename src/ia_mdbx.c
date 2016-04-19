@@ -8,9 +8,7 @@
 */
 
 #include <ioarena.h>
-
-/* LY: Ugly, but what solution is better? */
-#include "../db/mdbx/mdbx.h"
+#include "mdbx.h"
 
 struct iaprivate {
 	MDB_env *env;
@@ -48,16 +46,15 @@ static int ia_mdbx_open(const char *datadir)
 	if (rc != MDB_SUCCESS)
 		goto bailout;
 
-	/* LY: suggestions are welcome */
 	switch(ioarena.conf.syncmode) {
 	case IA_SYNC:
 		modeflags = MDB_LIFORECLAIM;
 		break;
 	case IA_LAZY:
-		modeflags = MDB_NOSYNC|MDB_NOMETASYNC|MDB_LIFORECLAIM;
+		modeflags = MDB_NOSYNC|MDB_NOMETASYNC;
 		break;
 	case IA_NOSYNC:
-		modeflags = MDB_WRITEMAP|MDB_UTTERLY_NOSYNC|MDB_NOMETASYNC|MDB_LIFORECLAIM;
+		modeflags = MDB_WRITEMAP|MDB_MAPASYNC|MDB_NOSYNC|MDB_NOMETASYNC;
 		break;
 	default:
 		ia_log("error: %s(): unsupported syncmode %s",
