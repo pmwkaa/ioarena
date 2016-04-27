@@ -5,7 +5,7 @@ macro(build_wiredtiger)
 	separate_arguments(WIREDTIGER_OPTS)
 	if (${PROJECT_BINARY_DIR} STREQUAL ${PROJECT_SOURCE_DIR})
 		add_custom_command(
-			OUTPUT ${PROJECT_BINARY_DIR}/db/wiredtiger/.libs/libwiredtiger.so
+			OUTPUT ${PROJECT_BINARY_DIR}/db/wiredtiger/.libs/libwiredtiger${CMAKE_SHARED_LIBRARY_SUFFIX}
 			WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/db/wiredtiger
 			COMMAND ./autogen.sh
 			COMMAND ./configure
@@ -14,7 +14,7 @@ macro(build_wiredtiger)
 		)
 	else()
 		add_custom_command(
-			OUTPUT ${PROJECT_BINARY_DIR}/db/wiredtiger/.libs/libwiredtiger.so
+			OUTPUT ${PROJECT_BINARY_DIR}/db/wiredtiger/.libs/libwiredtiger${CMAKE_SHARED_LIBRARY_SUFFIX}
 			WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/db/wiredtiger
 			COMMAND ./autogen.sh
 			COMMAND ./configure
@@ -25,10 +25,10 @@ macro(build_wiredtiger)
 		)
 	endif()
 	add_custom_target(libwiredtiger ALL
-		DEPENDS ${PROJECT_BINARY_DIR}/db/wiredtiger/.libs/libwiredtiger.so
+		DEPENDS ${PROJECT_BINARY_DIR}/db/wiredtiger/.libs/libwiredtiger${CMAKE_SHARED_LIBRARY_SUFFIX}
 	)
 	message(STATUS "Use shipped WiredTiger: ${PROJECT_SOURCE_DIR}/db/wiredtiger")
-	set (WIREDTIGER_LIBRARIES "${PROJECT_BINARY_DIR}/db/wiredtiger/.libs/libwiredtiger.so")
+	set (WIREDTIGER_LIBRARIES "${PROJECT_BINARY_DIR}/db/wiredtiger/.libs/libwiredtiger${CMAKE_SHARED_LIBRARY_SUFFIX}")
 	set (WIREDTIGER_FOUND 1)
 	add_dependencies(build_libs libwiredtiger)
 endmacro(build_wiredtiger)
