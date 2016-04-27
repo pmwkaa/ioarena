@@ -228,19 +228,21 @@ int ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_s
 				s != line ? ", " : "",
 				ia_benchmarkof(bench));
 
-		ia_log("doer.%d: {%s}, key-space %d, key-sequence %d",
-			doer->nth, line, key_space, key_sequence);
-	}
-
-	if (ia_kvgen_init(&doer->gen_a, doer->key_space, doer->key_sequence, ioarena.conf.vsize, 0)) {
-		ia_log("doer.%d: key-value generator failed, the options are correct?", doer->nth);
-		return -1;
-	}
-
-	if (benchmask & bench_mask_2keyspace) {
-		if (ia_kvgen_init(&doer->gen_b, doer->key_space + 1, doer->key_sequence, ioarena.conf.vsize, 0)) {
+		if (ia_kvgen_init(&doer->gen_a, doer->key_space, doer->key_sequence, ioarena.conf.vsize, 0)) {
 			ia_log("doer.%d: key-value generator failed, the options are correct?", doer->nth);
 			return -1;
+		}
+
+		if (benchmask & bench_mask_2keyspace) {
+			if (ia_kvgen_init(&doer->gen_b, doer->key_space + 1, doer->key_sequence, ioarena.conf.vsize, 0)) {
+				ia_log("doer.%d: key-value generator failed, the options are correct?", doer->nth);
+				return -1;
+			}
+			ia_log("doer.%d: {%s}, key-space %d and %d, key-sequence %d",
+				doer->nth, line, key_space, key_space +1, key_sequence);
+		} else {
+			ia_log("doer.%d: {%s}, key-space %d, key-sequence %d",
+				doer->nth, line, key_space, key_sequence);
 		}
 	}
 
