@@ -18,7 +18,7 @@ struct iastat {
 };
 
 struct iahistogram {
-	ia_timestamp_t checkpoint_ns;
+	ia_timestamp_t checkpoint_ns, begin_ns, end_ns;
 	iabenchmark bench;
 	char enabled;
 	ia_timestamp_t whole_min, whole_max;

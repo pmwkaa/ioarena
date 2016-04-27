@@ -288,6 +288,10 @@ static void ia_histogram_merge_locked(iahistogram *src, ia_timestamp_t now)
 		for (i = 0; i < ST_HISTOGRAM_COUNT; i++)
 			dst->buckets[i] += src->buckets[i];
 
+		if (! dst->begin_ns || dst->begin_ns > src->begin_ns)
+			dst->begin_ns = src->begin_ns;
+		if (dst->end_ns < src->end_ns)
+			dst->end_ns = src->end_ns;
 		if (dst->min > src->min)
 			dst->min = src->min;
 		if (dst->max < src->max)
@@ -316,6 +320,9 @@ ia_histogram_add(iahistogram *h, ia_timestamp_t t0, size_t volume)
 	uintmax_t now = ia_timestamp_ns();
 	ia_timestamp_t latency = now - t0;
 
+	if (! h->begin_ns)
+		h->begin_ns = t0;
+	h->end_ns = now;
 	h->acc.latency_sum_ns += latency;
 	h->acc.latency_sum_square += latency * latency;
 	h->acc.n++;
@@ -365,9 +372,6 @@ ia_histogram_add(iahistogram *h, ia_timestamp_t t0, size_t volume)
 void ia_histogram_print(const iaconfig *config)
 {
 	iahistogram *h;
-
-	const ia_timestamp_t wall_ns = global.checkpoint_ns - global.starting_point;
-	const double wall = wall_ns / (double) S;
 
 	for (h = global.per_bench; h < global.per_bench + IA_MAX; ++h) {
 		if (! h->enabled || ! h->acc.n)
@@ -428,6 +432,9 @@ void ia_histogram_print(const iaconfig *config)
 		printf("rms latency:%s/op\n", line);
 		snpf_lat(line, sizeof(line), h->whole_max);
 		printf("max latency:%s/op\n", line);
+
+		const ia_timestamp_t wall_ns = h->end_ns - h->begin_ns;
+		const double wall = wall_ns / (double) S;
 		const double rps = h->acc.n / wall;
 		snpf_val(line, sizeof(line), rps, "");
 		printf(" throughput:%sops/s\n", line);
