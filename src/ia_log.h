@@ -10,7 +10,8 @@
 
 void ia_vlog(char*, va_list);
 
-static inline void ia_log(char *fmt, ...) {
+static inline  __attribute__ ((format (printf, 1, 2)))
+void ia_log(char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 	ia_vlog(fmt, args);

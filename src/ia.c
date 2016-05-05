@@ -19,8 +19,7 @@ int ia_init(ia *a, int argc, char **argv)
 {
 	int rc;
 
-	ia_log("IOARENA (embedded storage benchmarking)");
-	ia_log("");
+	ia_log("IOARENA (embedded storage benchmarking)\n");
 
 	rc = ia_configinit(&a->conf);
 	if (rc == -1)
@@ -29,7 +28,6 @@ int ia_init(ia *a, int argc, char **argv)
 	if (rc == -1 || rc == 1)
 		return rc;
 	ia_configprint(&a->conf);
-	ia_log("");
 	a->driver = a->conf.driver_if;
 
 	mkdir(ioarena.conf.path, 0755);
@@ -115,11 +113,15 @@ static int ia_spread(int count, int *nth, long *rotator, long set, int *key_spac
 		}
 
 		assert(mask != 0);
-		if (mask & bench_mask_write)
+		if (mask & bench_mask_write) {
 			*key_space += 1;
+			if (mask & bench_mask_2keyspace)
+				*key_space += 1;
+		}
 
 		*nth += 1;
-		ia_doer_init(doer, *nth, mask, *key_space, *nth);
+		if (ia_doer_init(doer, *nth, mask, *key_space, *nth))
+			return -1;
 
 		pthread_t thread;
 		int rc = pthread_create(&thread, NULL, ia_doer_thread, doer);
@@ -133,13 +135,9 @@ static int ia_spread(int count, int *nth, long *rotator, long set, int *key_spac
 
 int ia_run(ia *a)
 {
-	iabenchmark bench;
-	int nth = 0;
-	int rc = 0;
-	int key_space = 0;
-
 	long set_rd = 0;
 	long set_wr = 0;
+	iabenchmark bench;
 	for (bench = IA_SET; bench < IA_MAX; bench++) {
 		if (! a->conf.benchmark_list[bench])
 			continue;
@@ -158,6 +156,25 @@ int ia_run(ia *a)
 	if (a->conf.wthr && set_wr == 0)
 		a->conf.wthr = 0;
 
+	int key_nsectors = 1;
+	if (key_nsectors < a->conf.rthr)
+		key_nsectors = a->conf.rthr;
+	if (key_nsectors < a->conf.wthr)
+		key_nsectors = a->conf.wthr;
+
+	int key_nspaces = 1;
+	if (key_nspaces < a->conf.wthr)
+		key_nspaces = a->conf.wthr;
+	if (set_wr & bench_mask_2keyspace)
+		key_nspaces	+= key_nspaces;
+
+	int rc = ia_kvgen_setup(!ioarena.conf.binary, ioarena.conf.ksize,
+		key_nspaces, key_nsectors, ioarena.conf.count, ioarena.conf.kvseed);
+	if (rc) {
+		ia_log("error: key-value generator setup failed, the options are correct?");
+		return rc;
+	}
+
 	rc = pthread_barrier_init(&a->barrier_start, NULL,
 		a->conf.rthr + a->conf.wthr + 1);
 	if (!rc)
@@ -170,6 +187,8 @@ int ia_run(ia *a)
 
 	ia_histogram_csvopen(&a->conf);
 
+	int nth = 0;
+	int key_space = 0;
 	rc = ia_spread(a->conf.rthr, &nth, &set_rd, set_rd, &key_space);
 	if (rc)
 		goto bailout;
@@ -181,7 +200,8 @@ int ia_run(ia *a)
 	iarusage rusage_start, rusage_fihish;
 	if (set_wr | set_rd) {
 		iadoer here;
-		ia_doer_init(&here, 0, set_wr | set_rd, 0, 0);
+		if (ia_doer_init(&here, 0, set_wr | set_rd, 0, 0))
+			goto bailout;
 
 		rc = ia_get_rusage(&rusage_start, a->datadir);
 		if (rc)

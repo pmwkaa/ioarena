@@ -8,9 +8,7 @@
 */
 
 #include <ioarena.h>
-
-/* LY: Ugly, but what solution is better? */
-#include "../db/mdbx/mdbx.h"
+#include "mdbx.h"
 
 struct iaprivate {
 	MDB_env *env;
@@ -48,16 +46,15 @@ static int ia_mdbx_open(const char *datadir)
 	if (rc != MDB_SUCCESS)
 		goto bailout;
 
-	/* LY: suggestions are welcome */
 	switch(ioarena.conf.syncmode) {
 	case IA_SYNC:
-		modeflags = MDB_LIFORECLAIM;
+		modeflags = MDBX_LIFORECLAIM;
 		break;
 	case IA_LAZY:
-		modeflags = MDB_NOSYNC|MDB_NOMETASYNC|MDB_LIFORECLAIM;
+		modeflags = MDB_NOSYNC|MDB_NOMETASYNC;
 		break;
 	case IA_NOSYNC:
-		modeflags = MDB_WRITEMAP|MDB_UTTERLY_NOSYNC|MDB_NOMETASYNC|MDB_LIFORECLAIM;
+		modeflags = MDB_WRITEMAP|MDBX_UTTERLY_NOSYNC;
 		break;
 	default:
 		ia_log("error: %s(): unsupported syncmode %s",
@@ -76,7 +73,7 @@ static int ia_mdbx_open(const char *datadir)
 		return -1;
 	}
 
-	rc = mdbx_env_open(self->env, datadir, MDB_CREATE|modeflags|MDB_NORDAHEAD, 0644);
+	rc = mdbx_env_open(self->env, datadir, modeflags|MDB_NORDAHEAD, 0644);
 	if (rc != MDB_SUCCESS)
 		goto bailout;
 	return 0;
@@ -219,6 +216,7 @@ static int ia_mdbx_done(iacontext* ctx, iabenchmark step)
 		rc = mdbx_txn_commit(ctx->txn);
 		if (rc != MDB_SUCCESS) {
 			mdbx_txn_abort(ctx->txn);
+			ctx->txn = NULL;
 			goto bailout;
 		}
 		ctx->txn = NULL;

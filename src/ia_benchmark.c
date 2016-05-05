@@ -20,6 +20,10 @@ const long bench_mask_write = 0
 	| 1ull << IA_CRUD
 	| 1ull << IA_DELETE;
 
+const long bench_mask_2keyspace = 0
+	| 1ull << IA_BATCH
+	| 1ull << IA_CRUD;
+
 static void ia_keynotfound(iadoer *doer, const char *op, iakv *k)
 {
 	ia_log("error: key %s not found (%s, #%d, %d+%d)",
@@ -54,12 +58,13 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 {
 	int rc = 0, rc2;
 	uintmax_t i;
+	struct ia_kvpool *pool_a = NULL;
+	struct ia_kvpool *pool_b = NULL;
 
 	//const char *name = ia_benchmarkof(bench);
 	//ia_log("<< %s.%s-%d", ioarena.conf.driver, name, doer->nth);
 
 	ia_histogram_reset(&doer->hg, bench);
-	ia_kvpool_rewind(&doer->pool);
 
 	for (i = 0; rc == 0 && i < ioarena.conf.count; ) {
 		ia_timestamp_t t0;
@@ -70,10 +75,8 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 		case IA_SET:
 		case IA_DELETE:
 		case IA_GET:
-			if (ia_kvpool_pull(&doer->pool, &a) || ia_kvpool_pull(&doer->pool, &b))
+			if (ia_kvgen_get(doer->gen_a, &a, bench != IA_SET))
 				goto bailout;
-			if (bench != IA_SET)
-				a.v = b.v = NULL;
 
 			t0 = ia_timestamp_ns();
 			rc = ioarena.driver->begin(doer->ctx, bench);
@@ -95,7 +98,7 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 			break;
 
 		case IA_CRUD:
-			if (ia_kvpool_pull(&doer->pool, &a) || ia_kvpool_pull(&doer->pool, &b))
+			if (ia_kvgen_get(doer->gen_a, &a, 0) || ia_kvgen_get(doer->gen_b, &b, 0))
 				goto bailout;
 			t0 = ia_timestamp_ns();
 			rc = ioarena.driver->begin(doer->ctx, IA_CRUD);
@@ -114,10 +117,17 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 			break;
 
 		case IA_BATCH:
+			rc = ia_kvpool_init(&pool_a, doer->gen_a, ioarena.conf.batch_length);
+			if (rc)
+				goto bailout;
+			rc = ia_kvpool_init(&pool_b, doer->gen_b, ioarena.conf.batch_length);
+			if (rc)
+				goto bailout;
+
 			t0 = ia_timestamp_ns();
 			rc = ioarena.driver->begin(doer->ctx, IA_BATCH);
 			for(j = 0; j < ioarena.conf.batch_length; ++j) {
-				if (ia_kvpool_pull(&doer->pool, &a) || ia_kvpool_pull(&doer->pool, &b))
+				if (ia_kvpool_pull(pool_a, &a) || ia_kvpool_pull(pool_b, &b))
 					goto bailout;
 				rc = ia_quadruple(doer, &a, &b);
 				if (rc || ++i == ioarena.conf.count)
@@ -158,6 +168,8 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 
 bailout:
 	ia_histogram_merge(&doer->hg);
+	ia_kvpool_destroy(&pool_a);
+	ia_kvpool_destroy(&pool_b);
 	//ia_log(">> %s.%s-%d", ioarena.conf.driver, name, doer->nth);
 	return rc;
 }
@@ -195,7 +207,7 @@ int ia_doer_fulfil(iadoer *doer)
 	return rc;
 }
 
-void ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_sequence)
+int ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_sequence)
 {
 	assert(benchmask);
 	doer->ctx = NULL;
@@ -203,6 +215,8 @@ void ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_
 	doer->benchmask = benchmask;
 	doer->key_space = key_space;
 	doer->key_sequence = key_sequence;
+	doer->gen_a = NULL;
+	doer->gen_b = NULL;
 
 	if (benchmask) {
 		char line[1024], *s;
@@ -214,19 +228,33 @@ void ia_doer_init(iadoer *doer, int nth, long benchmask, int key_space, int key_
 				s != line ? ", " : "",
 				ia_benchmarkof(bench));
 
-		ia_log("doer.%d: {%s}, key-space %d, key-sequence %d",
-			doer->nth, line, key_space, key_sequence);
+		if (ia_kvgen_init(&doer->gen_a, doer->key_space, doer->key_sequence, ioarena.conf.vsize, 0)) {
+			ia_log("doer.%d: key-value generator failed, the options are correct?", doer->nth);
+			return -1;
+		}
+
+		if (benchmask & bench_mask_2keyspace) {
+			if (ia_kvgen_init(&doer->gen_b, doer->key_space + 1, doer->key_sequence, ioarena.conf.vsize, 0)) {
+				ia_log("doer.%d: key-value generator failed, the options are correct?", doer->nth);
+				return -1;
+			}
+			ia_log("doer.%d: {%s}, key-space %d and %d, key-sequence %d",
+				doer->nth, line, key_space, key_space +1, key_sequence);
+		} else {
+			ia_log("doer.%d: {%s}, key-space %d, key-sequence %d",
+				doer->nth, line, key_space, key_sequence);
+		}
 	}
 
-	ia_kvpool_init(&doer->pool, ioarena.conf.ksize, ioarena.conf.vsize, doer->key_space, doer->key_sequence, ioarena.conf.count);
-	ia_kvpool_fill(&doer->pool, ioarena.conf.count, 2);
 	ia_histogram_init(&doer->hg);
 	__sync_fetch_and_add(&ioarena.doers_count, 1);
+	return 0;
 }
 
 void ia_doer_destroy(iadoer *doer)
 {
 	__sync_fetch_and_add(&ioarena.doers_count, -1);
 	ia_histogram_destroy(&doer->hg);
-	ia_kvpool_destory(&doer->pool);
+	ia_kvgen_destroy(&doer->gen_a);
+	ia_kvgen_destroy(&doer->gen_b);
 }

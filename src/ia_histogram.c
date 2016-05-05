@@ -288,6 +288,10 @@ static void ia_histogram_merge_locked(iahistogram *src, ia_timestamp_t now)
 		for (i = 0; i < ST_HISTOGRAM_COUNT; i++)
 			dst->buckets[i] += src->buckets[i];
 
+		if (! dst->begin_ns || dst->begin_ns > src->begin_ns)
+			dst->begin_ns = src->begin_ns;
+		if (dst->end_ns < src->end_ns)
+			dst->end_ns = src->end_ns;
 		if (dst->min > src->min)
 			dst->min = src->min;
 		if (dst->max < src->max)
@@ -316,6 +320,9 @@ ia_histogram_add(iahistogram *h, ia_timestamp_t t0, size_t volume)
 	uintmax_t now = ia_timestamp_ns();
 	ia_timestamp_t latency = now - t0;
 
+	if (! h->begin_ns)
+		h->begin_ns = t0;
+	h->end_ns = now;
 	h->acc.latency_sum_ns += latency;
 	h->acc.latency_sum_square += latency * latency;
 	h->acc.n++;
@@ -366,23 +373,20 @@ void ia_histogram_print(const iaconfig *config)
 {
 	iahistogram *h;
 
-	const ia_timestamp_t wall_ns = global.checkpoint_ns - global.starting_point;
-	const double wall = wall_ns / (double) S;
-
 	for (h = global.per_bench; h < global.per_bench + IA_MAX; ++h) {
 		if (! h->enabled || ! h->acc.n)
 			continue;
 
 		const char *name = ia_benchmarkof(h->bench);
-		printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> %s(%ju)\n", name, h->acc.n);
+		printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> %s(%ju)\n", name, h->acc.n);
 		FILE* csv = csv_create(config, name);
 
-		printf("[%8s   %8s   ]%16s%8s\n",
-			"ltn_from", "ltn_to", "ops_count", "%");
+		printf("[%8s   %8s   ]%16s%8s%10s\n",
+			"ltn_from", "ltn_to", "ops_count", "%", "p%");
 		if (csv)
-			fprintf(csv, "%s,\t%s,\t%s,\t%s\n",
-				"ltn_open", "ltn_close", "ops_count", "%");
-		printf("------------------------------------------------\n");
+			fprintf(csv, "%s,\t%s,\t%s,\t%s\t%s\n",
+				"ltn_open", "ltn_close", "ops_count", "%", "p%");
+		printf("----------------------------------------------------------\n");
 
 		int i;
 		char line[1024], *s;
@@ -401,23 +405,25 @@ void ia_histogram_print(const iaconfig *config)
 			s += snpf_lat(s, line + sizeof(line) - s,
 				ia_histogram_buckets[i] - 1);
 			s += snprintf(s, line + sizeof(line) - s,
-						  " ]%16zu%7.2f%%", h->buckets[i],
-						  h->buckets[i] * 1e2 / h->acc.n);
+						  " ]%16zu%7.2f%%%9.4f%%", h->buckets[i],
+						  h->buckets[i] * 1e2 / h->acc.n,
+						  n * 1e2 / h->acc.n );
 
 			printf("%s\n", line);
 
 			if(csv)
-				fprintf(csv, "%e,\t%e,\t%ju,\t%e\n",
+				fprintf(csv, "%e,\t%e,\t%ju,\t%e,\t%e\n",
 						((i > 0) ? ia_histogram_buckets[i - 1] : 0) / (double) S,
 						(ia_histogram_buckets[i] - 1) / (double) S,
 						h->buckets[i],
-						h->buckets[i] * 1e2 / h->acc.n
+						h->buckets[i] * 1e2 / h->acc.n,
+						n * 1e2 / h->acc.n
 					);
 		}
-		printf("------------------------------------------------\n");
+		printf("----------------------------------------------------------\n");
 
 		snpf_lat(line, sizeof(line), h->acc.latency_sum_ns);
-		printf("total:%16s  %16zu%7.2f%%\n", line, n, n * 1e2 / h->acc.n);
+		printf("total:%16s  %16zu\n", line, n);
 		snpf_lat(line, sizeof(line), h->whole_min);
 		printf("min latency:%s/op\n", line);
 		const ia_timestamp_t avg = h->acc.latency_sum_ns / h->acc.n;
@@ -428,6 +434,9 @@ void ia_histogram_print(const iaconfig *config)
 		printf("rms latency:%s/op\n", line);
 		snpf_lat(line, sizeof(line), h->whole_max);
 		printf("max latency:%s/op\n", line);
+
+		const ia_timestamp_t wall_ns = h->end_ns - h->begin_ns;
+		const double wall = wall_ns / (double) S;
 		const double rps = h->acc.n / wall;
 		snpf_val(line, sizeof(line), rps, "");
 		printf(" throughput:%sops/s\n", line);
@@ -449,7 +458,7 @@ void ia_histogram_print(const iaconfig *config)
 
 void ia_histogram_rusage(const iaconfig *config, const iarusage *start, const iarusage *fihish)
 {
-	printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> rusage\n");
+	printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> rusage\n");
 	FILE* csv = csv_create(config, "rusage");
 
 	printf("iops: read %ld, write %ld, page %ld\n",
