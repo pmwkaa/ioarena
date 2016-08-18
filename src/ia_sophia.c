@@ -21,7 +21,7 @@ struct iacontext {
 };
 
 static void
-ia_sophia_on_recover(char *trace, void *arg)
+ia_sophia_on_log(char *trace, void *arg)
 {
 	ia_log("sophia: %s", trace);
 	(void)arg;
@@ -40,10 +40,13 @@ static int ia_sophia_open(const char *datadir)
 	if (self->env == NULL)
 		return -1;
 	sp_setstring(self->env, "sophia.path", datadir, 0);
-	sp_setstring(self->env, "scheduler.on_recover",
-	             (void*)(uintptr_t)ia_sophia_on_recover, 0);
+	sp_setstring(self->env, "sophia.on_log",
+	             (void*)(uintptr_t)ia_sophia_on_log, 0);
 	sp_setstring(self->env, "db", "test", 0);
-	sp_setint(self->env, "db.test.mmap", 1);
+	sp_setstring(self->env, "db.test.scheme", "key", 0);
+	sp_setstring(self->env, "db.test.scheme.key", "string, key(0)", 0);
+	sp_setstring(self->env, "db.test.scheme", "value", 0);
+	sp_setstring(self->env, "db.test.scheme.value", "string", 0);
 
 	/* LY: suggestions are welcome */
 	switch(ioarena.conf.syncmode) {
@@ -142,11 +145,6 @@ static int ia_sophia_begin(iacontext *ctx, iabenchmark step)
 		break;
 
 	case IA_BATCH:
-		ctx->txn = sp_batch(self->db);
-		if (ctx->txn == NULL)
-			goto bailout;
-		break;
-
 	case IA_CRUD:
 		ctx->txn = sp_begin(self->env);
 		if (ctx->txn == NULL)
@@ -157,7 +155,7 @@ static int ia_sophia_begin(iacontext *ctx, iabenchmark step)
 		ctx->cursor = sp_cursor(self->env);
 		if (ctx->cursor == NULL)
 			goto bailout;
-		ctx->entry = sp_object(self->db);
+		ctx->entry = sp_document(self->db);
 		break;
 
 	default:
@@ -235,7 +233,7 @@ static int ia_sophia_next(iacontext* ctx, iabenchmark step, iakv *kv)
 
 	switch(step) {
 	case IA_SET:
-		ctx->entry = sp_object(self->db);
+		ctx->entry = sp_document(self->db);
 		sp_setstring(ctx->entry, "key", kv->k, kv->ksize);
 		sp_setstring(ctx->entry, "value", kv->v, kv->vsize);
 		rc = sp_set(ctx->txn, ctx->entry);
@@ -245,7 +243,7 @@ static int ia_sophia_next(iacontext* ctx, iabenchmark step, iakv *kv)
 		break;
 
 	case IA_DELETE:
-		ctx->entry = sp_object(self->db);
+		ctx->entry = sp_document(self->db);
 		sp_setstring(ctx->entry, "key", kv->k, kv->ksize);
 		rc = sp_delete(ctx->txn, ctx->entry);
 		if (rc == -1)
@@ -256,7 +254,7 @@ static int ia_sophia_next(iacontext* ctx, iabenchmark step, iakv *kv)
 	case IA_GET:
 		if (ctx->entry)
 			sp_destroy(ctx->entry);
-		ctx->entry = sp_object(self->db);
+		ctx->entry = sp_document(self->db);
 		sp_setstring(ctx->entry, "key", kv->k, kv->ksize);
 		ctx->entry = sp_get(self->db, ctx->entry);
 		if (ctx->entry == NULL) {
