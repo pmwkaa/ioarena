@@ -73,10 +73,10 @@ static int ia_sophia_open(const char *datadir)
 	case IA_WAL_INDEF:
 		break;
 	case IA_WAL_ON:
-		sp_setint(self->env, "log.enabled", 1);
+		sp_setint(self->env, "log.enable", 1);
 		break;
 	case IA_WAL_OFF:
-		sp_setint(self->env, "log.enabled", 0);
+		sp_setint(self->env, "log.enable", 0);
 		break;
 	default:
 		ia_log("error: %s(): unsupported walmode %s",
