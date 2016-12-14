@@ -57,6 +57,10 @@ if (HAVE_NESSDB)
 	set(ia_src ${ia_src} ia_nessdb.c)
 endif (HAVE_NESSDB)
 
+if (HAVE_SQLITE3)
+	set(ia_src ${ia_src} ia_sqlite3.c)
+endif (HAVE_SQLITE3)
+
 add_executable(${ia_binary} ${ia_src})
 add_dependencies(${ia_binary} build_libs)
 

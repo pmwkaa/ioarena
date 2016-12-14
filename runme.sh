@@ -20,7 +20,10 @@ mkdir -p $DIR && \
 	-DENABLE_MDBX=ON \
 	-DENABLE_LEVELDB=ON \
 	-DENABLE_NESSDB=ON \
+	-DENABLE_SQLITE3=ON \
 	) || exit 1
 
 echo "*** run make..."
-make -C $DIR
+
+# $@ for additional params like ./runme.sh VERBOSE=1 -j 8
+make "$@" -C $DIR
