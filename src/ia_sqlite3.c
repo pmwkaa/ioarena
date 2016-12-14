@@ -9,28 +9,19 @@
 #include <sqlite3.h>
 
 struct iaprivate {
-//	rocksdb_options_t *opts;
-//	rocksdb_readoptions_t *ropts;
-//	rocksdb_writeoptions_t *wopts;
 	sqlite3 *db;
 };
-
-#define CMD_SIZE 1024
-
 struct iacontext {
-	//rocksdb_iterator_t *it;
-	//rocksdb_writebatch_t *batch;
-	//char* result;
-	char cmd_buf[CMD_SIZE];
-	int batch;
+	void *value;
 };
+#define CMD_SIZE 1024
 
 static int ia_sqlite3_open(const char *datadir)
 {
 	int rc;
 	char *zErrMsg = 0;
 	char cmd_buf[CMD_SIZE];
-	const char *db_name = "/test.db";
+	const char *db_name = "/test.sqlite";
 	int db_path_sz = strlen(datadir) + strlen(db_name) + 1;
 	char db_path[db_path_sz];
 	iadriver *drv = ioarena.driver;
@@ -43,7 +34,6 @@ static int ia_sqlite3_open(const char *datadir)
 	memset(db_path, 0, db_path_sz); 
 	strcat(db_path, datadir);
 	strcat(db_path, db_name);
-	printf("db_path %s\n", db_path);
 
 	rc = sqlite3_open(db_path, &(self->db));
 	if(rc) {
@@ -78,7 +68,7 @@ static int ia_sqlite3_open(const char *datadir)
 	}
 
 	memset(cmd_buf, 0, CMD_SIZE);
-	/* PRAGMA journal_mode = DELETE | TRUNCATE | PERSIST | MEMORY | WAL | OFF;  // задать тип журнала */
+	/* PRAGMA journal_mode = DELETE | TRUNCATE | PERSIST | MEMORY | WAL | OFF;  //choose type of journal mode */
 	switch(ioarena.conf.walmode) {
 	case IA_WAL_INDEF:
 /*		
@@ -105,7 +95,8 @@ static int ia_sqlite3_open(const char *datadir)
 		goto bailout;
 	}
 
-	rc = sqlite3_exec(self->db, "CREATE TABLE IF NOT EXISTS benchmark_t(id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT, value BLOB)", 0, 0, &zErrMsg);
+	//rc = sqlite3_exec(self->db, "CREATE TABLE IF NOT EXISTS benchmark_t(id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT, value BLOB)", 0, 0, &zErrMsg);
+	rc = sqlite3_exec(self->db, "CREATE TABLE IF NOT EXISTS benchmark_t(key TEXT PRIMARY KEY, value BLOB)", 0, 0, &zErrMsg);
 	if(rc != SQLITE_OK) {
 		fprintf(stderr, "SQL error: %s\n", zErrMsg);
 		sqlite3_close(self->db);
@@ -122,12 +113,11 @@ bailout:
 
 static int ia_sqlite3_close(void)
 {
-//	int rc;
-//	char *zErrMsg = 0;
 	iaprivate *self = ioarena.driver->priv;
 	if (self) {
 	/*
-		rc = sqlite3_exec(self->db, "DROP TABLE IF EXISTS benchmark_t", 0, 0, &zErrMsg);
+		char *zErrMsg = 0;
+		int rc = sqlite3_exec(self->db, "DROP TABLE IF EXISTS benchmark_t", 0, 0, &zErrMsg);
 		if(rc != SQLITE_OK) {
 			fprintf(stderr, "SQL error: %s\n", zErrMsg);
 			sqlite3_free(zErrMsg);
@@ -158,9 +148,6 @@ static int ia_sqlite3_begin(iacontext *ctx, iabenchmark step)
 	(void) ctx;
 	char *zErrMsg = 0;
 	iaprivate *self = ioarena.driver->priv;
-	//memset(ctx->cmd_buf, 0, CMD_SIZE);
-	//snprintf(ctx->cmd_buf, CMD_SIZE, "PRAGMA journal_mode=%s;");
-
 
 	switch(step) {
 	case IA_CRUD:
@@ -229,12 +216,19 @@ bailout:
 }
 
 static int select_callback(void *data, int argc, char **argv, char **azColName){
+#ifdef DEBUG
 	int i;
-	fprintf(stderr, "%s: ", (const char*)data);
+	fprintf(stderr, "%s: \n", (const char*)data);
 	for(i=0; i<argc; i++){
 		printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
 	}
 	printf("\n");
+#else
+	(void)data;
+	(void)argc;
+	(void)argv;
+	(void)azColName;
+#endif
 	return 0;
 }
 
@@ -244,18 +238,15 @@ static int ia_sqlite3_next(iacontext* ctx, iabenchmark step, iakv *kv)
 	(void) ctx;
 	char cmd_buf[CMD_SIZE];
 	char *zErrMsg = 0;
-	//char key[kv->ksize + 1];
-	//key[kv->ksize] = 0;
-	//memcpy(key, kv->k, kv->ksize);
-	//memset(cmd_buf, 0, CMD_SIZE);
+
 	iaprivate *self = ioarena.driver->priv;
 
 	switch(step) {
 	case IA_SET:
 		memset(cmd_buf, 0, CMD_SIZE);
-		snprintf(cmd_buf, CMD_SIZE, "REPLACE INTO benchmark_t (key, value) VALUES(\"%s\", ?);", kv->k);
+		snprintf(cmd_buf, CMD_SIZE, "INSERT INTO benchmark_t (key, value) VALUES(\"%s\", ?);", kv->k);
+		//snprintf(cmd_buf, CMD_SIZE, "REPLACE INTO benchmark_t (key, value) VALUES(\"%s\", ?);", kv->k);
 		sqlite3_stmt *stmt = NULL;
-		//rc = sqlite3_prepare_v2(self->db, cmd_buf, -1, &stmt, &zErrMsg);
 		rc = sqlite3_prepare_v2(self->db, cmd_buf, -1, &stmt, NULL);
 		if (rc != SQLITE_OK) {
 			fprintf(stderr, "prepare failed: %s, error: %s\n", sqlite3_errmsg(self->db), zErrMsg);
