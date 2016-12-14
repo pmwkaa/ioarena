@@ -22,3 +22,6 @@
 [submodule "db/mdbx"]
 	path = db/mdbx
 	url = https://github.com/ReOpen/libmdbx.git
+[submodule "db/ejdb"]
+	path = db/ejdb
+	url = https://github.com/Softmotions/ejdb.git
