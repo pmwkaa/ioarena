@@ -21,6 +21,7 @@
 #cmakedefine HAVE_LMDB 1
 #cmakedefine HAVE_MDBX 1
 #cmakedefine HAVE_NESSDB 1
+#cmakedefine HAVE_EJDB 1
 
 extern iadriver ia_leveldb;
 extern iadriver ia_rocksdb;
@@ -30,6 +31,7 @@ extern iadriver ia_forestdb;
 extern iadriver ia_wt;
 extern iadriver ia_sophia;
 extern iadriver ia_nessdb;
+extern iadriver ia_ejdb;
 extern iadriver ia_dummy;
 extern iadriver ia_debug;
 
@@ -74,6 +76,11 @@ ia_of(char *name)
 #ifdef HAVE_MDBX
 	if (strcasecmp(name, "mdbx") == 0) {
 		return &ia_mdbx;
+	}
+#endif
+#ifdef HAVE_EJDB
+	if (strcasecmp(name, "ejdb") == 0) {
+		return &ia_ejdb;
 	}
 #endif
 	if (strcasecmp(name, "dummy") == 0) {
@@ -121,6 +128,10 @@ ia_supported(void)
 #endif
 #ifdef HAVE_MDBX
 	len += snprintf(list + len, sizeof(list) - len, "%smdbx",
+	                (len > 0) ? ", ": "");
+#endif
+#ifdef HAVE_EJDB
+	len += snprintf(list + len, sizeof(list) - len, "%sejdb",
 	                (len > 0) ? ", ": "");
 #endif
 	len += snprintf(list + len, sizeof(list) - len, "%sdummy",
