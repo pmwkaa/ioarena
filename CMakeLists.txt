@@ -127,6 +127,20 @@ if (ENABLE_NESSDB)
 	include_directories(${NESSDB_INCLUDE_DIRS})
 endif(ENABLE_NESSDB)
 
+# Sqlite3
+option(ENABLE_SQLITE3 "Enable Sqlite3" OFF)
+if (ENABLE_SQLITE3)
+	find_package(Sqlite3 QUIET)
+	if (NOT SQLITE3_FOUND)
+		#include(BuildSqlite3)
+		#build_Sqlite3()
+		message( SEND_ERROR "Sqlite3 NOT FOUND" )
+	endif (NOT SQLITE3_FOUND)
+	set(HAVE_SQLITE3 1)
+	set(ia_libraries ${ia_libraries} ${SQLITE3_LIBRARIES})
+	include_directories(${SQLITE3_INCLUDE_DIRS})
+endif(ENABLE_SQLITE3)
+
 message (STATUS "")
 message (STATUS "IOARENA: embedded storage benchmarking.")
 
@@ -139,6 +153,7 @@ message (STATUS "ENABLE_FORESTDB:   ${ENABLE_FORESTDB}")
 message (STATUS "ENABLE_LMDB:       ${ENABLE_LMDB}")
 message (STATUS "ENABLE_MDBX:       ${ENABLE_MDBX}")
 message (STATUS "ENABLE_NESSDB:     ${ENABLE_NESSDB}")
+message (STATUS "ENABLE_SQLITE3:    ${ENABLE_SQLITE3}")
 message (STATUS "")
 
 #message (STATUS "NB_PROCESSOR: ${NB_PROCESSOR}")
