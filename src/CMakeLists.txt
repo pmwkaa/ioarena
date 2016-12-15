@@ -61,6 +61,10 @@ if (HAVE_SQLITE3)
 	set(ia_src ${ia_src} ia_sqlite3.c)
 endif (HAVE_SQLITE3)
 
+if (HAVE_EJDB)
+	set(ia_src ${ia_src} ia_ejdb.c)
+endif (HAVE_EJDB)
+
 add_executable(${ia_binary} ${ia_src})
 add_dependencies(${ia_binary} build_libs)
 
