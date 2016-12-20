@@ -9,6 +9,8 @@
 #include <ioarena.h>
 #include <ejdb.h>
 
+//#define EJDB_DEBUG 1
+
 struct iaprivate {
 	EJDB *jb;   /* ejdb main handle */
 	EJQ *jq;    /* ejdb query */
@@ -102,8 +104,8 @@ static int ia_ejdb_open(const char *datadir)
 
 	db_collection_options.large         = false;
 	db_collection_options.compressed    = false;
-	db_collection_options.records       = 128000;
-	db_collection_options.cachedrecords = 10000;
+	db_collection_options.records       = ioarena.conf.count;
+	db_collection_options.cachedrecords = 0;
 	ia_log("EJDB collection options:\n"
 		"Large collection: %s. It can be larger than 2GB. Default false\n"
 		"Deflate collection: %s. Collection records will be compressed with DEFLATE compression. Default: false\n"
@@ -131,8 +133,13 @@ bailout:
 
 static int ia_ejdb_close(void)
 {
+	int rc = 0;
 	iaprivate *self = ioarena.driver->priv;
 	if (self) {
+	 	rc = (ejdbsetindex(self->jc, "key", JBIDXSTR | JBIDXREBLD) ? 0 : -1);
+#ifdef EJDB_DEBUG
+		ia_log("in %s(): rebuild index %s\n", __func__, (rc == 0 ? "OK" : "FAILED"));
+#endif
 		ejdbclose(self->jb);
 		ioarena.driver->priv = NULL;
 		free(self);
@@ -264,7 +271,8 @@ static int ia_ejdb_next(iacontext* ctx, iabenchmark step, iakv *kv)
 			break;
 		}
 		TCLIST *res = ejdbqryexecute(self->jc, self->jq, &count, 0, NULL);
-		/*
+		
+#ifdef EJDB_DEBUG
 		ia_log("Records found: %d\n", count);
 		for (int i = 0; i < TCLISTNUM(res); ++i) {
 			void *bsdata = TCLISTVALPTR(res, i);
@@ -272,7 +280,8 @@ static int ia_ejdb_next(iacontext* ctx, iabenchmark step, iakv *kv)
 			dump_bson(bsdata);
 		}
 		ia_log("\n");
-		*/
+#endif
+		
 		tclistdel(res);
 		ejdbquerydel(self->jq);
 		bson_destroy(&bq);
