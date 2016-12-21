@@ -25,3 +25,6 @@
 [submodule "db/ejdb"]
 	path = db/ejdb
 	url = https://github.com/Softmotions/ejdb.git
+[submodule "db/vedis"]
+	path = db/vedis
+	url = https://github.com/symisc/vedis.git
