@@ -66,11 +66,8 @@ if (HAVE_EJDB)
 endif (HAVE_EJDB)
 
 if (HAVE_VEDISDB)
-	set_property(SOURCE ../db/vedis/vedis.c APPEND_STRING PROPERTY COMPILE_FLAGS " -DVEDIS_ENABLE_THREADS")
-	get_source_file_property( CC_OPTS ../db/vedis/vedis.c COMPILE_FLAGS )
-	string( REPLACE "-Werror" "" CC_OPTS ${CC_OPTS} )
-	set_source_files_properties( ../db/vedis/vedis.c COMPILE_FLAGS ${CC_OPTS} )
 	set(ia_src ${ia_src} ia_vedisdb.c ../db/vedis/vedis.c)
+	set_property(SOURCE ../db/vedis/vedis.c APPEND_STRING PROPERTY COMPILE_FLAGS " -DVEDIS_ENABLE_THREADS -Wno-error -std=gnu89")
 endif (HAVE_VEDISDB)
 
 add_executable(${ia_binary} ${ia_src})
