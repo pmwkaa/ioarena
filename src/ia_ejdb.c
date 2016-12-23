@@ -17,6 +17,7 @@ struct iaprivate {
 	EJCOLL *jc; /* ejdb collection */
 };
 
+__attribute__((unused))
 static void dump_bson(const char *bsdata) {
 	
 	int rc = 0;
@@ -134,6 +135,7 @@ bailout:
 static int ia_ejdb_close(void)
 {
 	int rc = 0;
+	(void)rc;
 	iaprivate *self = ioarena.driver->priv;
 	if (self) {
 	 	rc = (ejdbsetindex(self->jc, "key", JBIDXSTR | JBIDXREBLD) ? 0 : -1);

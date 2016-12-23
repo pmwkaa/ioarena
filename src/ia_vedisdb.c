@@ -13,6 +13,7 @@ struct iaprivate {
 	vedis *db;   /* vedisdb main handle */
 };
 
+__attribute__((unused))
 static void diag_put(vedis *pStore) {
 	const char *zBuf;
 	int iLen;
@@ -28,8 +29,10 @@ static void diag_put(vedis *pStore) {
 	}
 }
 
+__attribute__((unused))
 static int data_consumer_callback(const void *pData,unsigned int nDatalen,void *pUserData /* Unused */) {
 
+	(void)pUserData;
         ssize_t nWr;
         nWr = write(STDOUT_FILENO,pData,nDatalen);
         if( nWr < 0 ){
@@ -43,7 +46,6 @@ static int data_consumer_callback(const void *pData,unsigned int nDatalen,void *
 static int ia_vedisdb_open(const char *datadir)
 {	
 	int rc = 0;
-	int open_mode = 0;
 	const char *db_name = "/test.vedisdb";
   	int db_path_sz = strlen(datadir) + strlen(db_name) + 1;
   	char db_path[db_path_sz];
@@ -101,7 +103,6 @@ bailout:
 
 static int ia_vedisdb_close(void)
 {
-	int rc = 0;
 	iaprivate *self = ioarena.driver->priv;
 	if (self) {
 		/* Auto-commit and close the vedis handle */
