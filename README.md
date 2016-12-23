@@ -11,14 +11,14 @@ The goal of this project is to provide a standart and simple
 in use instrument for benchmarking, so any database developer or user
 can reference to or repeat obtained results.
 
-Benchmarking methods: *set*, *get*, *delete*, *iterate*, *batch*, *CRUD*
+Benchmarking methods: *set*, *get*, *delete*, *iterate*, *batch*, *crud*
 
 Sync modes: *sync*, *lazy*, *no-sync*
 
 WAL modes: *indef* (per engine default), *wal-on*, *wal-off*
 
 Supported databases: **rocksdb**, **leveldb**, **forestdb**, **lmdb**,
-**mdbx** (modified lmdb), **nessdb**, **wiredtiger**, **sophia**, **sqlite3**, **ejdb**
+**mdbx**, **nessdb**, **wiredtiger**, **sophia**, **sqlite3**, **ejdb**
 
 *New drivers or any kind of enhancements are very welcome!*
 
@@ -82,3 +82,4 @@ Authors
 | Dmitry Simonenko @pmwkaa | Original author. |
 | Leonid Yuriev @leo-yuriev | Multithreading and isolation from the testcases the interface of a DB drivers cardinally redesigned, it is clear and intelligible now. |
 | Bohu Tang @bohutang | Added support for NessDB. |
+| Egor Zyryanov @er0p | Added support for SQLite, EJDB, Vedis. |
