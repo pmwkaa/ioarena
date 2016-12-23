@@ -22,6 +22,7 @@
 #cmakedefine HAVE_MDBX 1
 #cmakedefine HAVE_NESSDB 1
 #cmakedefine HAVE_SQLITE3 1
+#cmakedefine HAVE_EJDB 1
 
 extern iadriver ia_leveldb;
 extern iadriver ia_rocksdb;
@@ -32,6 +33,7 @@ extern iadriver ia_wt;
 extern iadriver ia_sophia;
 extern iadriver ia_nessdb;
 extern iadriver ia_sqlite3;
+extern iadriver ia_ejdb;
 extern iadriver ia_dummy;
 extern iadriver ia_debug;
 
@@ -83,6 +85,11 @@ ia_of(char *name)
 		return &ia_sqlite3;
 	}
 #endif
+#ifdef HAVE_EJDB
+	if (strcasecmp(name, "ejdb") == 0) {
+		return &ia_ejdb;
+	}
+#endif
 	if (strcasecmp(name, "dummy") == 0) {
 		return &ia_dummy;
 	}
@@ -132,6 +139,10 @@ ia_supported(void)
 #endif
 #ifdef HAVE_SQLITE3
 	len += snprintf(list + len, sizeof(list) - len, "%ssqlite3",
+	                (len > 0) ? ", ": "");
+#endif
+#ifdef HAVE_EJDB
+	len += snprintf(list + len, sizeof(list) - len, "%sejdb",
 	                (len > 0) ? ", ": "");
 #endif
 	len += snprintf(list + len, sizeof(list) - len, "%sdummy",

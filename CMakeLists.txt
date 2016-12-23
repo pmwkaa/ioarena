@@ -141,6 +141,19 @@ if (ENABLE_SQLITE3)
 	include_directories(${SQLITE3_INCLUDE_DIRS})
 endif(ENABLE_SQLITE3)
 
+# EJDB
+option(ENABLE_EJDB "Enable EJDB" OFF)
+if (ENABLE_EJDB)
+	find_package(EJDB QUIET)
+	if (NOT EJDB_FOUND)
+		include(BuildEJDB)
+		build_ejdb()
+	endif (NOT EJDB_FOUND)
+	set(HAVE_EJDB 1)
+	set(ia_libraries ${ia_libraries} ${EJDB_LIBRARIES})
+	include_directories(${EJDB_INCLUDE_DIRS})
+endif(ENABLE_EJDB)
+
 message (STATUS "")
 message (STATUS "IOARENA: embedded storage benchmarking.")
 
@@ -154,6 +167,7 @@ message (STATUS "ENABLE_LMDB:       ${ENABLE_LMDB}")
 message (STATUS "ENABLE_MDBX:       ${ENABLE_MDBX}")
 message (STATUS "ENABLE_NESSDB:     ${ENABLE_NESSDB}")
 message (STATUS "ENABLE_SQLITE3:    ${ENABLE_SQLITE3}")
+message (STATUS "ENABLE_EJDB:       ${ENABLE_EJDB}")
 message (STATUS "")
 
 #message (STATUS "NB_PROCESSOR: ${NB_PROCESSOR}")
