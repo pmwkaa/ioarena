@@ -67,6 +67,7 @@ endif (HAVE_EJDB)
 
 if (HAVE_VEDISDB)
 	set(ia_src ${ia_src} ia_vedisdb.c ../db/vedis/vedis.c)
+	set_property(SOURCE ../db/vedis/vedis.c APPEND_STRING PROPERTY COMPILE_FLAGS " -DVEDIS_ENABLE_THREADS")
 #	set(ia_src ${ia_src} ../db/vedis/vedis.c)
 endif (HAVE_VEDISDB)
 
