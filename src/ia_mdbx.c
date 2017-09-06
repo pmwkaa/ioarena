@@ -11,15 +11,15 @@
 #include "mdbx.h"
 
 struct iaprivate {
-	MDB_env *env;
-	MDB_dbi dbi;
+	MDBX_env *env;
+	MDBX_dbi dbi;
 };
 
-#define INVALID_DBI ((MDB_dbi)-1)
+#define INVALID_DBI ((MDBX_dbi)-1)
 
 struct iacontext {
-	MDB_txn* txn;
-	MDB_cursor *cursor;
+	MDBX_txn* txn;
+	MDBX_cursor *cursor;
 };
 
 static int ia_mdbx_open(const char *datadir)
@@ -28,9 +28,9 @@ static int ia_mdbx_open(const char *datadir)
 	iadriver *drv = ioarena.driver;
 
 	ia_log(
-		"WARNING: Currently MDBX don't have any releases and include a few additional checks, TODOs and bottlenecks.\n"
+		"NOTE: Currently MDBX don't have any releases and include a few additional checks, TODOs and bottlenecks.\n"
 		"Please wait for the release to compare performance and set of features.\n"
-		"https://github.com/ReOpen/libmdbx/issues/1\n"
+		"https://github.com/leo-yuriev/libmdbx\n"
 	);
 
 	drv->priv = calloc(1, sizeof(iaprivate));
@@ -40,10 +40,10 @@ static int ia_mdbx_open(const char *datadir)
 	iaprivate *self = drv->priv;
 	self->dbi = INVALID_DBI;
 	int rc = mdbx_env_create(&self->env);
-	if (rc != MDB_SUCCESS)
+	if (rc != MDBX_SUCCESS)
 		goto bailout;
 	rc = mdbx_env_set_mapsize(self->env, 4 * 1024 * 1024 * 1024ULL /* TODO */);
-	if (rc != MDB_SUCCESS)
+	if (rc != MDBX_SUCCESS)
 		goto bailout;
 
 	switch(ioarena.conf.syncmode) {
@@ -51,10 +51,10 @@ static int ia_mdbx_open(const char *datadir)
 		modeflags = MDBX_LIFORECLAIM;
 		break;
 	case IA_LAZY:
-		modeflags = MDB_NOSYNC|MDB_NOMETASYNC;
+		modeflags = MDBX_NOSYNC|MDBX_NOMETASYNC;
 		break;
 	case IA_NOSYNC:
-		modeflags = MDB_WRITEMAP|MDBX_UTTERLY_NOSYNC;
+		modeflags = MDBX_WRITEMAP|MDBX_UTTERLY_NOSYNC;
 		break;
 	default:
 		ia_log("error: %s(): unsupported syncmode %s",
@@ -73,8 +73,8 @@ static int ia_mdbx_open(const char *datadir)
 		return -1;
 	}
 
-	rc = mdbx_env_open(self->env, datadir, modeflags|MDB_NORDAHEAD, 0644);
-	if (rc != MDB_SUCCESS)
+	rc = mdbx_env_open(self->env, datadir, modeflags|MDBX_NORDAHEAD, 0644);
+	if (rc != MDBX_SUCCESS)
 		goto bailout;
 	return 0;
 
@@ -103,15 +103,15 @@ static iacontext* ia_mdbx_thread_new(void)
 	int rc;
 
 	if (self->dbi == INVALID_DBI) {
-		MDB_txn *txn = NULL;
+		MDBX_txn *txn = NULL;
 
 		rc = mdbx_txn_begin(self->env, NULL, 0, &txn);
-		if (rc != MDB_SUCCESS)
+		if (rc != MDBX_SUCCESS)
 			goto bailout;
 
 		rc = mdbx_dbi_open(txn, NULL, 0, &self->dbi);
 		mdbx_txn_abort(txn);
-		if (rc != MDB_SUCCESS)
+		if (rc != MDBX_SUCCESS)
 			goto bailout;
 
 		assert(self->dbi != INVALID_DBI);
@@ -156,7 +156,7 @@ static int ia_mdbx_begin(iacontext *ctx, iabenchmark step)
 			ctx->txn = NULL;
 		}
 		rc = mdbx_txn_begin(self->env, NULL, 0, &ctx->txn);
-		if (rc != MDB_SUCCESS)
+		if (rc != MDBX_SUCCESS)
 			goto bailout;
 		break;
 
@@ -164,28 +164,28 @@ static int ia_mdbx_begin(iacontext *ctx, iabenchmark step)
 	case IA_GET:
 		if (ctx->txn) {
 			rc = mdbx_txn_renew(ctx->txn);
-			if (rc != MDB_SUCCESS) {
+			if (rc != MDBX_SUCCESS) {
 				mdbx_txn_abort(ctx->txn);
 				ctx->txn = NULL;
 			}
 		}
 		if (ctx->txn == NULL) {
-			rc = mdbx_txn_begin(self->env, NULL, MDB_RDONLY, &ctx->txn);
-			if (rc != MDB_SUCCESS)
+			rc = mdbx_txn_begin(self->env, NULL, MDBX_RDONLY, &ctx->txn);
+			if (rc != MDBX_SUCCESS)
 				goto bailout;
 		}
 
 		if (step == IA_ITERATE) {
 			if (ctx->cursor) {
 				rc = mdbx_cursor_renew(ctx->txn, ctx->cursor);
-				if (rc != MDB_SUCCESS) {
+				if (rc != MDBX_SUCCESS) {
 					mdbx_cursor_close(ctx->cursor);
 					ctx->cursor = NULL;
 				}
 			}
 			if (ctx->cursor == NULL) {
 				rc = mdbx_cursor_open(ctx->txn, self->dbi, &ctx->cursor);
-				if (rc != MDB_SUCCESS)
+				if (rc != MDBX_SUCCESS)
 					goto bailout;
 			}
 		}
@@ -214,7 +214,7 @@ static int ia_mdbx_done(iacontext* ctx, iabenchmark step)
 	case IA_CRUD:
 	case IA_DELETE:
 		rc = mdbx_txn_commit(ctx->txn);
-		if (rc != MDB_SUCCESS) {
+		if (rc != MDBX_SUCCESS) {
 			mdbx_txn_abort(ctx->txn);
 			ctx->txn = NULL;
 			goto bailout;
@@ -244,38 +244,38 @@ bailout:
 static int ia_mdbx_next(iacontext* ctx, iabenchmark step, iakv *kv)
 {
 	iaprivate *self = ioarena.driver->priv;
-	MDB_val k, v;
+	MDBX_val k, v;
 	int rc;
 
 	switch(step) {
 	case IA_SET:
-		k.mv_data = kv->k;
-		k.mv_size = kv->ksize;
-		v.mv_data = kv->v;
-		v.mv_size = kv->vsize;
+		k.iov_base = kv->k;
+		k.iov_len = kv->ksize;
+		v.iov_base = kv->v;
+		v.iov_len = kv->vsize;
 		rc = mdbx_put(ctx->txn, self->dbi, &k, &v, 0);
-		if (rc != MDB_SUCCESS)
+		if (rc != MDBX_SUCCESS)
 			goto bailout;
 		break;
 
 	case IA_DELETE:
-		k.mv_data = kv->k;
-		k.mv_size = kv->ksize;
+		k.iov_base = kv->k;
+		k.iov_len = kv->ksize;
 		rc = mdbx_del(ctx->txn, self->dbi, &k, 0);
-		if (rc == MDB_NOTFOUND)
+		if (rc == MDBX_NOTFOUND)
 			rc = ENOENT;
-		else if (rc != MDB_SUCCESS)
+		else if (rc != MDBX_SUCCESS)
 			goto bailout;
 		break;
 
 	case IA_ITERATE:
-		rc = mdbx_cursor_get(ctx->cursor, &k, &v, MDB_NEXT);
-		if (rc == MDB_SUCCESS) {
-			kv->k = k.mv_data;
-			kv->ksize = k.mv_size;
-			kv->v = v.mv_data;
-			kv->vsize = v.mv_size;
-		} else if (rc == MDB_NOTFOUND) {
+		rc = mdbx_cursor_get(ctx->cursor, &k, &v, MDBX_NEXT);
+		if (rc == MDBX_SUCCESS) {
+			kv->k = k.iov_base;
+			kv->ksize = k.iov_len;
+			kv->v = v.iov_base;
+			kv->vsize = v.iov_len;
+		} else if (rc == MDBX_NOTFOUND) {
 			kv->k = NULL;
 			kv->ksize = 0;
 			kv->v = NULL;
@@ -287,11 +287,11 @@ static int ia_mdbx_next(iacontext* ctx, iabenchmark step, iakv *kv)
 		break;
 
 	case IA_GET:
-		k.mv_data = kv->k;
-		k.mv_size = kv->ksize;
+		k.iov_base = kv->k;
+		k.iov_len = kv->ksize;
 		rc = mdbx_get(ctx->txn, self->dbi, &k, &v);
-		if (rc != MDB_SUCCESS) {
-			if (rc != MDB_NOTFOUND)
+		if (rc != MDBX_SUCCESS) {
+			if (rc != MDBX_NOTFOUND)
 				goto bailout;
 			rc = ENOENT;
 		}
