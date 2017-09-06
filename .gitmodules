@@ -21,7 +21,7 @@
 	url = https://github.com/BohuTANG/nessDB.git
 [submodule "db/mdbx"]
 	path = db/mdbx
-	url = https://github.com/ReOpen/libmdbx.git
+	url = https://github.com/leo-yuriev/libmdbx.git
 [submodule "db/ejdb"]
 	path = db/ejdb
 	url = https://github.com/Softmotions/ejdb.git
