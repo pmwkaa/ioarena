@@ -105,7 +105,7 @@ static int ia_ejdb_open(const char *datadir)
 
 	db_collection_options.large         = false;
 	db_collection_options.compressed    = false;
-	db_collection_options.records       = ioarena.conf.count;
+	db_collection_options.records       = ioarena.conf.keys;
 	db_collection_options.cachedrecords = 0;
 	ia_log("EJDB collection options:\n"
 		"Large collection: %s. It can be larger than 2GB. Default false\n"

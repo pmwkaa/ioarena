@@ -24,6 +24,10 @@ const long bench_mask_2keyspace = 0
 	| 1ull << IA_BATCH
 	| 1ull << IA_CRUD;
 
+const int threshold_mix_70_30 = 11;
+const int threshold_mix_50_50 = 8;
+const int threshold_mix_30_70 = 5;
+
 static void ia_keynotfound(iadoer *doer, const char *op, iakv *k)
 {
 	ia_log("error: key %s not found (%s, #%d, %d+%d)",
@@ -63,6 +67,24 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 
 	//const char *name = ia_benchmarkof(bench);
 	//ia_log("<< %s.%s-%d", ioarena.conf.driver, name, doer->nth);
+	unsigned long long reads = 0;
+	unsigned long long writes = 0;
+	iabenchmark bench_tmp = bench;
+	int threshold_mix = 0;
+
+	switch(bench) {
+	case IA_MIX_30_70:
+		threshold_mix = threshold_mix_30_70;
+		break;
+	case IA_MIX_50_50:
+		threshold_mix = threshold_mix_50_50;
+		break;
+	case IA_MIX_70_30:
+		threshold_mix = threshold_mix_70_30;
+		break;
+	default:
+		break;
+	}
 
 	ia_histogram_reset(&doer->hg, bench);
 
@@ -72,21 +94,37 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 		int j;
 
 		switch(bench) {
+
+		case IA_MIX_30_70:
+		case IA_MIX_50_50:
+		case IA_MIX_70_30:
+			if (!i || (a.k[a.ksize - 1] & 1) +
+					(a.k[a.ksize - 2] & 1) * 2 +
+					(a.k[a.ksize - 3] & 1) * 4 +
+					(a.k[a.ksize - 4] & 1) * 8 < threshold_mix) {
+				bench_tmp = IA_GET;
+			}
+			else {
+				bench_tmp = IA_SET;
+			}
 		case IA_SET:
 		case IA_DELETE:
 		case IA_GET:
-			if (ia_kvgen_get(doer->gen_a, &a, bench != IA_SET))
+			if (ia_kvgen_get(doer->gen_a, &a, bench_tmp != IA_SET))
 				goto bailout;
 
+			if (bench_tmp == IA_GET) reads++;
+			else writes++;
+
 			t0 = ia_timestamp_ns();
-			rc = ioarena.driver->begin(doer->ctx, bench);
+			rc = ioarena.driver->begin(doer->ctx, bench_tmp);
 			if (!rc)
-				rc = ioarena.driver->next(doer->ctx, bench, &a);
-			rc2 = ioarena.driver->done(doer->ctx, bench);
+				rc = ioarena.driver->next(doer->ctx, bench_tmp, &a);
+			rc2 = ioarena.driver->done(doer->ctx, bench_tmp);
 			ia_histogram_add(&doer->hg, t0,
-				bench == IA_DELETE ? a.ksize : a.ksize + a.vsize);
+				bench_tmp == IA_DELETE ? a.ksize : a.ksize + a.vsize);
 			if (rc == ENOENT) {
-				ia_keynotfound(doer, ia_benchmarkof(bench), &a);
+				ia_keynotfound(doer, ia_benchmarkof(bench_tmp), &a);
 				if (ioarena.conf.ignore_keynotfound)
 					rc = 0;
 			}

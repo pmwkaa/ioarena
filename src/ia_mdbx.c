@@ -42,7 +42,7 @@ static int ia_mdbx_open(const char *datadir)
 	int rc = mdbx_env_create(&self->env);
 	if (rc != MDBX_SUCCESS)
 		goto bailout;
-	rc = mdbx_env_set_mapsize(self->env, 4 * 1024 * 1024 * 1024ULL /* TODO */);
+	rc = mdbx_env_set_mapsize(self->env, 128ULL * 1024ULL * 1024ULL * 1024ULL /* TODO */);
 	if (rc != MDBX_SUCCESS)
 		goto bailout;
 
