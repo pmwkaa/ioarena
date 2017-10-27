@@ -42,7 +42,18 @@ static int ia_mdbx_open(const char *datadir)
 	int rc = mdbx_env_create(&self->env);
 	if (rc != MDBX_SUCCESS)
 		goto bailout;
-	rc = mdbx_env_set_mapsize(self->env, 4 * 1024 * 1024 * 1024ULL /* TODO */);
+
+	const size_t kilo = 1024;
+	const size_t mega = kilo << 10;
+	const size_t giga = mega << 10;
+	/* FIXME: define values via command-line args */
+	rc = mdbx_env_set_geometry(self->env,
+		1 * mega /* size_lower */,
+		1 * giga/* size_now */,
+		2 * giga /* size_upper */,
+		64 * mega /* growth_step */,
+		64 * mega /* shrink_threshold */,
+		4 * kilo /* pagesize */);
 	if (rc != MDBX_SUCCESS)
 		goto bailout;
 
@@ -73,7 +84,7 @@ static int ia_mdbx_open(const char *datadir)
 		return -1;
 	}
 
-	rc = mdbx_env_open(self->env, datadir, modeflags|MDBX_NORDAHEAD, 0644);
+	rc = mdbx_env_open(self->env, datadir, modeflags | MDBX_NORDAHEAD, 0644);
 	if (rc != MDBX_SUCCESS)
 		goto bailout;
 	return 0;
