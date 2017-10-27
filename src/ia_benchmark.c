@@ -158,6 +158,8 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench)
 			}
 			if (rc == ENOENT)
 				rc = 0;
+			if (!rc)
+				rc = ioarena.driver->done(doer->ctx, IA_ITERATE);
 			break;
 
 		default:
