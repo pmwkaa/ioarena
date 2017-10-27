@@ -100,17 +100,20 @@ static int ia_mdbx_close(void)
 static iacontext* ia_mdbx_thread_new(void)
 {
 	iaprivate *self = ioarena.driver->priv;
-	int rc;
+	int rc, err;
 
 	if (self->dbi == INVALID_DBI) {
+		/* just bind thread to DB */
 		MDBX_txn *txn = NULL;
-
-		rc = mdbx_txn_begin(self->env, NULL, 0, &txn);
+		rc = mdbx_txn_begin(self->env, NULL, MDBX_RDONLY, &txn);
 		if (rc != MDBX_SUCCESS)
 			goto bailout;
 
 		rc = mdbx_dbi_open(txn, NULL, 0, &self->dbi);
-		mdbx_txn_abort(txn);
+		err = mdbx_txn_abort(txn);
+		if (err != MDBX_SUCCESS)
+			ia_log("error: %s, %s (%d)", "mdbx_txn_abort", mdbx_strerror(err), err);
+		assert(err == 0);
 		if (rc != MDBX_SUCCESS)
 			goto bailout;
 
@@ -129,8 +132,12 @@ void ia_mdbx_thread_dispose(iacontext *ctx)
 {
 	if (ctx->cursor)
 		mdbx_cursor_close(ctx->cursor);
-	if (ctx->txn)
-		mdbx_txn_abort(ctx->txn);
+	if (ctx->txn) {
+		int err = mdbx_txn_abort(ctx->txn);
+		if (err != MDBX_SUCCESS)
+			ia_log("error: %s, %s (%d)", "mdbx_txn_abort", mdbx_strerror(err), err);
+		assert(err == 0);
+	}
 	free(ctx);
 }
 
@@ -152,8 +159,12 @@ static int ia_mdbx_begin(iacontext *ctx, iabenchmark step)
 		}
 		if (ctx->txn) {
 			/* LY: transaction could NOT be reused for read/write. */
-			mdbx_txn_abort(ctx->txn);
+			rc = mdbx_txn_abort(ctx->txn);
 			ctx->txn = NULL;
+			if (rc != MDBX_SUCCESS) {
+				ia_log("error: %s, %s (%d)", "mdbx_txn_abort", mdbx_strerror(rc), rc);
+				goto bailout;
+			}
 		}
 		rc = mdbx_txn_begin(self->env, NULL, 0, &ctx->txn);
 		if (rc != MDBX_SUCCESS)
@@ -165,8 +176,13 @@ static int ia_mdbx_begin(iacontext *ctx, iabenchmark step)
 		if (ctx->txn) {
 			rc = mdbx_txn_renew(ctx->txn);
 			if (rc != MDBX_SUCCESS) {
-				mdbx_txn_abort(ctx->txn);
+				ia_log("warning: %s, %s (%d)", "mdbx_txn_renew", mdbx_strerror(rc), rc);
+				rc = mdbx_txn_abort(ctx->txn);
 				ctx->txn = NULL;
+				if (rc != MDBX_SUCCESS) {
+					ia_log("error: %s, %s (%d)", "mdbx_txn_abort", mdbx_strerror(rc), rc);
+					goto bailout;
+				}
 			}
 		}
 		if (ctx->txn == NULL) {
@@ -179,6 +195,7 @@ static int ia_mdbx_begin(iacontext *ctx, iabenchmark step)
 			if (ctx->cursor) {
 				rc = mdbx_cursor_renew(ctx->txn, ctx->cursor);
 				if (rc != MDBX_SUCCESS) {
+					ia_log("warning: %s, %s (%d)", "mdbx_cursor_renew", mdbx_strerror(rc), rc);
 					mdbx_cursor_close(ctx->cursor);
 					ctx->cursor = NULL;
 				}
@@ -215,7 +232,9 @@ static int ia_mdbx_done(iacontext* ctx, iabenchmark step)
 	case IA_DELETE:
 		rc = mdbx_txn_commit(ctx->txn);
 		if (rc != MDBX_SUCCESS) {
-			mdbx_txn_abort(ctx->txn);
+			int err = mdbx_txn_abort(ctx->txn);
+			if (err != MDBX_SUCCESS)
+				ia_log("error: %s, %s (%d)", "mdbx_txn_abort", mdbx_strerror(err), err);
 			ctx->txn = NULL;
 			goto bailout;
 		}
@@ -224,8 +243,11 @@ static int ia_mdbx_done(iacontext* ctx, iabenchmark step)
 
 	case IA_ITERATE:
 	case IA_GET:
-		mdbx_txn_reset(ctx->txn);
-		rc = 0;
+		rc = mdbx_txn_reset(ctx->txn);
+		if (rc != MDBX_SUCCESS) {
+			ia_log("error: %s, %s (%d)", "mdbx_txn_reset", mdbx_strerror(rc), rc);
+			goto bailout;
+		}
 		break;
 
 	default:
