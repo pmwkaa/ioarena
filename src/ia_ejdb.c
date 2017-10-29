@@ -260,7 +260,7 @@ static int ia_ejdb_next(iacontext* ctx, iabenchmark step, iakv *kv)
 		rc = 0;
 		break;
 	case IA_ITERATE:
-		rc = 0;
+		rc = ENOSYS;
 		break;
 	case IA_GET:
 		count = 0;

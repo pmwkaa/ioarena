@@ -297,7 +297,7 @@ static int ia_sqlite3_next(iacontext* ctx, iabenchmark step, iakv *kv)
 		}
 		rc = 0;
 	case IA_ITERATE:
-		rc = 0;
+		rc = ENOSYS;
 		break;
 	default:
 		assert(0);

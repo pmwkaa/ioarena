@@ -135,7 +135,8 @@ static int ia_nessdb_next(iacontext* ctx, iabenchmark step, iakv *kv)
 	case IA_DELETE:
 	case IA_ITERATE:
 	case IA_GET:
-		rc = 0;
+		/* LY: WTF ?! */
+		rc = ENOSYS;
 		break;
 	default:
 		assert(0);

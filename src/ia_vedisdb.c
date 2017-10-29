@@ -222,16 +222,15 @@ static int ia_vedisdb_next(iacontext* ctx, iabenchmark step, iakv *kv)
 			rc = 0;
 		} else if(rc == VEDIS_NOTFOUND) {
 			//ia_log("key not exists\n");
-			rc = 0;
+			rc = ENOENT;
 		} else if(rc == VEDIS_BUSY) {
 			ia_log("busy\n");
-			rc = 0;
+			rc = EBUSY;
 		} else {
 			ia_log("other error (OS specific), rc = %d\n", rc);
 			rc = -1;
 		}
 		break;
-	case IA_ITERATE:
 	case IA_GET:
 		size = ioarena.conf.vsize;
 		rc = vedis_kv_fetch(self->db, kv->k, kv->ksize, buf, &size);
@@ -241,10 +240,10 @@ static int ia_vedisdb_next(iacontext* ctx, iabenchmark step, iakv *kv)
 			rc = 0;
 		} else if(rc == VEDIS_NOTFOUND) {
 			ia_log("value not found\n");
-			rc = 0;
+			rc = ENOENT;
 		} else if(rc == VEDIS_BUSY) {
 			ia_log("busy\n");
-			rc = 0;
+			rc = EBUSY;
 		} else if(rc == VEDIS_ABORT) {
 			ia_log("VEDIS_ABORT, rc = %d, \"%s\" \"%s\"\n", rc, kv->k, buf);
 			rc = -1;		
@@ -252,6 +251,9 @@ static int ia_vedisdb_next(iacontext* ctx, iabenchmark step, iakv *kv)
 			ia_log("other error (OS specific), rc = %d\n", rc);
 			rc = -1;
 		}
+		break;
+	case IA_ITERATE:
+		rc = ENOSYS;
 		break;
 	default:
 		assert(0);
