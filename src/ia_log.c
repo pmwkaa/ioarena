@@ -8,9 +8,8 @@
 
 #include <ioarena.h>
 
-void ia_vlog(char *fmt, va_list args)
-{
-	vprintf(fmt, args);
-	printf("\n");
-	fflush(NULL);
+void ia_vlog(char *fmt, va_list args) {
+  vprintf(fmt, args);
+  printf("\n");
+  fflush(NULL);
 }
