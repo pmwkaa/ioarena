@@ -79,7 +79,4 @@ if (NOT APPLE)
   target_link_libraries(${ia_binary} rt)
 endif(NOT APPLE)
 
-configure_file(
-  "ia_build.h.cmake"
-  "ia_build.h"
-  )
+configure_file("ia_build.h.in" "ia_build.h")
