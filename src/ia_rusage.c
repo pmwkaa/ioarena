@@ -1,4 +1,4 @@
-
+﻿
 /*
  * ioarena: embedded storage benchmarking
  *
@@ -7,7 +7,7 @@
  * BSD License
 */
 
-#include <ioarena.h>
+#include "ioarena.h"
 
 static __thread uintmax_t diskusage;
 

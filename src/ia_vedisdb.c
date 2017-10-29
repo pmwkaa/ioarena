@@ -1,4 +1,4 @@
-
+﻿
 /*
  * ioarena: embedded storage benchmarking
  *
@@ -6,8 +6,8 @@
  * BSD License
 */
 
-#include <ioarena.h>
-#include <vedis.h>
+#include "ioarena.h"
+#include "vedis.h"
 
 struct iaprivate {
   vedis *db; /* vedisdb main handle */

@@ -1,3 +1,4 @@
+﻿#pragma once
 #ifndef IA_BENCHMARK_H_
 #define IA_BENCHMARK_H_
 

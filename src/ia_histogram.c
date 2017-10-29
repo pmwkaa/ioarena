@@ -1,4 +1,4 @@
-/*
+﻿/*
  * ioarena: embedded storage benchmarking
  *
  * Copyright (c) Dmitry Simonenko
@@ -6,7 +6,7 @@
  * BSD License
 */
 
-#include <ioarena.h>
+#include "ioarena.h"
 
 #define INTERVAL_STAT S
 #define INTERVAL_MERGE (S / 100)

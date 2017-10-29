@@ -1,4 +1,4 @@
-
+﻿
 /*
  * ioarena: embedded storage benchmarking
  *
@@ -7,7 +7,7 @@
  * BSD License
 */
 
-#include <ioarena.h>
+#include "ioarena.h"
 
 int ia_configinit(iaconfig *c) {
   c->driver = NULL;

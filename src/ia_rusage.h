@@ -1,3 +1,4 @@
+﻿#pragma once
 
 /*
  * ioarena: embedded storage benchmarking

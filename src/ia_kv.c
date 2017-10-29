@@ -1,4 +1,4 @@
-
+﻿
 /*
  * ioarena: embedded storage benchmarking
  *
@@ -6,7 +6,7 @@
  * BSD License
 */
 
-#include <ioarena.h>
+#include "ioarena.h"
 #include <math.h>
 
 /* #define DEBUG_KEYGEN 1 */

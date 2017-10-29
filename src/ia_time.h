@@ -1,3 +1,4 @@
+﻿#pragma once
 #ifndef IA_TIME_H_
 #define IA_TIME_H_
 

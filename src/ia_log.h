@@ -1,3 +1,4 @@
+﻿#pragma once
 #ifndef IA_LOG_H_
 #define IA_LOG_H_
 

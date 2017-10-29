@@ -1,4 +1,4 @@
-
+﻿
 /*
  * ioarena: embedded storage benchmarking
  *
@@ -6,8 +6,8 @@
  * BSD License
 */
 
-#include <ioarena.h>
-#include <wiredtiger.h>
+#include "ioarena.h"
+#include "wiredtiger.h"
 
 struct iaprivate {
   WT_CONNECTION *conn;

@@ -1,12 +1,12 @@
-/*
+﻿/*
  * ioarena: embedded storage benchmarking
  *
  * Copyright (c) ioarena authors
  * BSD License
 */
 
-#include <ioarena.h>
-#include <sqlite3.h>
+#include "ioarena.h"
+#include <sqlite3.h> // external header
 
 struct iaprivate {
   sqlite3 *db;

@@ -1,4 +1,4 @@
-
+﻿
 /*
  * ioarena: embedded storage benchmarking
  *
@@ -6,8 +6,8 @@
  * BSD License
 */
 
-#include <ejdb.h>
-#include <ioarena.h>
+#include "ejdb.h"
+#include "ioarena.h"
 
 //#define EJDB_DEBUG 1
 

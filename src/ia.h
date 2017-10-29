@@ -1,3 +1,4 @@
+﻿#pragma once
 #ifndef IA_H_
 #define IA_H_
 
@@ -9,6 +10,13 @@
 */
 
 typedef struct ia ia;
+
+#ifndef PATH_MAX
+#include <linux/limits.h>
+#endif
+
+#include "ia_config.h"
+#include "ia_driver.h"
 
 struct ia {
   iadriver *driver;

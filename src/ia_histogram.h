@@ -1,3 +1,4 @@
+﻿#pragma once
 #ifndef IA_HISTOGRAM_H_
 #define IA_HISTOGRAM_H_
 
@@ -9,6 +10,10 @@
 */
 
 typedef struct iahistogram iahistogram;
+
+#include "ia_config.h"
+#include "ia_rusage.h"
+#include "ia_time.h"
 
 #define ST_HISTOGRAM_COUNT 167
 

@@ -1,4 +1,4 @@
-
+﻿
 /*
  * ioarena: embedded storage benchmarking
  *
@@ -6,7 +6,7 @@
  * BSD License
 */
 
-#include <ioarena.h>
+#include "ioarena.h"
 
 const long bench_mask_read = 0 | 1ull << IA_BATCH | 1ull << IA_CRUD |
                              1ull << IA_ITERATE | 1ull << IA_GET;

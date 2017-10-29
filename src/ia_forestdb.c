@@ -6,8 +6,8 @@
  * BSD License
 */
 
+#include "ioarena.h"
 #include <forestdb.h>
-#include <ioarena.h>
 
 struct iaprivate {
   fdb_config config;

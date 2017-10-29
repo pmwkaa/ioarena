@@ -1,3 +1,4 @@
+﻿#pragma once
 #ifndef IOARENA_H_
 #define IOARENA_H_
 
@@ -23,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -68,16 +70,16 @@ typedef enum { IA_SYNC, IA_LAZY, IA_NOSYNC } iasyncmode;
 
 typedef enum { IA_WAL_INDEF, IA_WAL_ON, IA_WAL_OFF } iawalmode;
 
-#include <ia.h>
-#include <ia_benchmark.h>
-#include <ia_build.h>
-#include <ia_config.h>
-#include <ia_driver.h>
-#include <ia_histogram.h>
-#include <ia_kv.h>
-#include <ia_log.h>
-#include <ia_rusage.h>
-#include <ia_time.h>
+#include "ia.h"
+#include "ia_benchmark.h"
+#include "ia_build.h"
+#include "ia_config.h"
+#include "ia_driver.h"
+#include "ia_histogram.h"
+#include "ia_kv.h"
+#include "ia_log.h"
+#include "ia_rusage.h"
+#include "ia_time.h"
 
 extern iadriver ia_leveldb;
 extern iadriver ia_rocksdb;

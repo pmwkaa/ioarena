@@ -1,4 +1,4 @@
-
+﻿
 /*
  * ioarena: embedded storage benchmarking
  *
@@ -7,8 +7,8 @@
  * BSD License
 */
 
+#include "ioarena.h"
 #include "mdbx.h"
-#include <ioarena.h>
 
 struct iaprivate {
   MDBX_env *env;

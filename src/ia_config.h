@@ -1,3 +1,4 @@
+﻿#pragma once
 #ifndef IA_CONFIG_H_
 #define IA_CONFIG_H_
 
@@ -9,6 +10,8 @@
 */
 
 typedef struct iaconfig iaconfig;
+
+#include "ia_driver.h"
 
 struct iaconfig {
   char *driver;

@@ -1,3 +1,4 @@
+﻿#pragma once
 #ifndef IA_KV_H_
 #define IA_KV_H_
 
