@@ -73,7 +73,7 @@ static int ia_wt_open(const char *datadir)
 		self->need_checkpoints = 1;
 
 	char config[256];
-	snprintf(config, sizeof(config), "create, %s%s", wal_config, durability_config);
+	snprintf(config, sizeof(config), "create,cache_size=1Gb,%s%s", wal_config, durability_config);
 	int rc = wiredtiger_open(datadir, NULL, config, &self->conn);
 	if (rc != 0)
 		goto bailout;
