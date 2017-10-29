@@ -67,8 +67,12 @@ if (HAVE_EJDB)
 endif (HAVE_EJDB)
 
 if (HAVE_VEDISDB)
-  set(ia_src ${ia_src} drivers/ia_vedisdb.c ../db/vedis/vedis.c)
-  set_property(SOURCE ../db/vedis/vedis.c APPEND_STRING PROPERTY COMPILE_FLAGS " -DVEDIS_ENABLE_THREADS -Wno-error -std=gnu89")
+  add_library(vedisDB SHARED ../db/vedis/vedis.c)
+  set_property(TARGET vedisDB APPEND_STRING PROPERTY COMPILE_FLAGS " -DVEDIS_ENABLE_THREADS -Wno-error -std=gnu89")
+  target_link_libraries(vedisDB "${CMAKE_THREAD_LIBS_INIT}")
+
+  set(ia_src ${ia_src} drivers/ia_vedisdb.c)
+  set(ia_libraries ${ia_libraries} vedisDB)
 endif (HAVE_VEDISDB)
 
 add_executable(${ia_binary} ${ia_src})
