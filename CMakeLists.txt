@@ -23,6 +23,19 @@ endif()
 #     we had compiled (or found), but avoids mixing.
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 
+#
+# Enable 'make reformat' target.
+find_program(CLANG_FORMAT clang-format)
+if(CLANG_FORMAT)
+  add_custom_target(reformat
+    VERBATIM
+    COMMAND
+      git ls-files |
+      grep -E \\.\(c|cxx|cc|cpp|h|hxx|hpp\)\(\\.in\)?\$ |
+      xargs clang-format -i --style=file
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+endif(CLANG_FORMAT)
+
 add_custom_target(build_libs)
 set(ia_libraries "")
 
