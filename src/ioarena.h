@@ -81,14 +81,6 @@ typedef enum { IA_WAL_INDEF, IA_WAL_ON, IA_WAL_OFF } iawalmode;
 #include "ia_rusage.h"
 #include "ia_time.h"
 
-extern iadriver ia_leveldb;
-extern iadriver ia_rocksdb;
-extern iadriver ia_lmdb;
-extern iadriver ia_mdbx;
-extern iadriver ia_forestdb;
-extern iadriver ia_wt;
-extern iadriver ia_sophia;
-extern iadriver ia_dummy;
 extern ia ioarena;
 
 #endif

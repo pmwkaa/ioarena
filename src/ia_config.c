@@ -199,7 +199,7 @@ int ia_configparse(iaconfig *c, int argc, char **argv) {
     ia_configusage(c);
     return -1;
   }
-  c->driver_if = ia_of(c->driver);
+  c->driver_if = ia_get_driver_for(c->driver);
   if (c->driver_if == NULL) {
     ia_log("error: unknown database driver '%s'", c->driver);
     return -1;
