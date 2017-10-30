@@ -18,7 +18,7 @@ Sync modes: *sync*, *lazy*, *no-sync*
 WAL modes: *indef* (per engine default), *wal-on*, *wal-off*
 
 Supported databases: **rocksdb**, **leveldb**, **forestdb**, **lmdb**,
-**mdbx**, **nessdb**, **wiredtiger**, **sophia**, **sqlite3**, **ejdb**
+**mdbx**, **wiredtiger**, **sophia**, **sqlite3**, **ejdb**
 
 *New drivers or any kind of enhancements are very welcome!*
 
@@ -81,5 +81,4 @@ Authors
 |---|---|
 | Dmitry Simonenko @pmwkaa | Original author. |
 | Leonid Yuriev @leo-yuriev | Multithreading and isolation from the testcases the interface of a DB drivers cardinally redesigned, it is clear and intelligible now. |
-| Bohu Tang @bohutang | Added support for NessDB. |
 | Egor Zyryanov @er0p | Added support for SQLite, EJDB, Vedis. |

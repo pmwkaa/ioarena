@@ -88,7 +88,6 @@ extern iadriver ia_mdbx;
 extern iadriver ia_forestdb;
 extern iadriver ia_wt;
 extern iadriver ia_sophia;
-extern iadriver ia_nessdb;
 extern iadriver ia_dummy;
 extern ia ioarena;
 

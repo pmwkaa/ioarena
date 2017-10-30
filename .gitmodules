@@ -17,9 +17,6 @@
 [submodule "db/sophia"]
 	path = db/sophia
 	url = https://github.com/pmwkaa/sophia
-[submodule "db/nessdb"]
-	path = db/nessdb
-	url = https://github.com/BohuTANG/nessDB.git
 [submodule "db/mdbx"]
 	path = db/mdbx
 	url = https://github.com/leo-yuriev/libmdbx.git

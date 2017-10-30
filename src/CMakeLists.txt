@@ -54,10 +54,6 @@ if (HAVE_MDBX)
   set(ia_src ${ia_src} drivers/ia_mdbx.c)
 endif (HAVE_MDBX)
 
-if (HAVE_NESSDB)
-  set(ia_src ${ia_src} drivers/ia_nessdb.c)
-endif (HAVE_NESSDB)
-
 if (HAVE_SQLITE3)
   set(ia_src ${ia_src} drivers/ia_sqlite3.c)
 endif (HAVE_SQLITE3)
