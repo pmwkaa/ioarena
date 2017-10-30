@@ -69,14 +69,9 @@ static int ia_sqlite3_open(const char *datadir) {
 
   memset(cmd_buf, 0, CMD_SIZE);
   /* PRAGMA journal_mode = DELETE | TRUNCATE | PERSIST | MEMORY | WAL | OFF;
-   * //choose type of journal mode */
+   * choose type of journal mode */
   switch (ioarena.conf.walmode) {
   case IA_WAL_INDEF:
-    /*
-                    Default journal_mode is "DELETE"
-                    snprintf(cmd_buf, CMD_SIZE, "PRAGMA journal_mode=%s;",
-       "DELETE");
-    */
     break;
   case IA_WAL_ON:
     snprintf(cmd_buf, CMD_SIZE, "PRAGMA journal_mode=%s;", "WAL");
@@ -271,9 +266,6 @@ static int ia_sqlite3_next(iacontext *ctx, iabenchmark step, iakv *kv) {
       }
     }
     sqlite3_finalize(stmt);
-    // rc = ness_db_set(self->db, kv->k, kv->ksize, kv->v, kv->vsize);
-    // if (rc != 1)
-    //	goto bailout;
     rc = 0;
     break;
   case IA_DELETE:
@@ -289,12 +281,9 @@ static int ia_sqlite3_next(iacontext *ctx, iabenchmark step, iakv *kv) {
     rc = 0;
     break;
   case IA_GET:
-    // const char* data = "Select callback function called";
     memset(cmd_buf, 0, CMD_SIZE);
     snprintf(cmd_buf, CMD_SIZE, "SELECT * FROM benchmark_t WHERE key = \"%s\";",
              kv->k);
-    // rc = sqlite3_exec(self->db, cmd_buf, select_callback, (void *)data,
-    // &zErrMsg);
     rc = sqlite3_exec(self->db, cmd_buf, select_callback, NULL, &zErrMsg);
     if (rc != SQLITE_OK) {
       fprintf(stderr, "SQL error: %s\n", zErrMsg);
