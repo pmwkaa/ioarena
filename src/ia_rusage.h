@@ -1,3 +1,4 @@
+﻿#pragma once
 
 /*
  * ioarena: embedded storage benchmarking
@@ -10,13 +11,13 @@
 typedef struct iarusage iarusage;
 
 struct iarusage {
-	uintmax_t disk;
-	size_t ram;
-	uintmax_t cpu_kernel_ns;
-	uintmax_t cpu_user_ns;
-	uintmax_t iops_read;
-	uintmax_t iops_write;
-	uintmax_t iops_page;
+  uintmax_t disk;
+  size_t ram;
+  uintmax_t cpu_kernel_ns;
+  uintmax_t cpu_user_ns;
+  uintmax_t iops_read;
+  uintmax_t iops_write;
+  uintmax_t iops_page;
 };
 
 int ia_get_rusage(iarusage *, const char *datadir);

@@ -1,3 +1,4 @@
+﻿#pragma once
 #ifndef IA_DRIVER_H_
 #define IA_DRIVER_H_
 
@@ -12,18 +13,21 @@ typedef struct iadriver iadriver;
 typedef struct iaprivate iaprivate;
 typedef struct iacontext iacontext;
 
+#include "ia_histogram.h"
+#include "ia_kv.h"
+
 struct iadriver {
-	const char *name;
-	iaprivate *priv;
-	int (*open)(const char *datadir);
-	int (*close)(void);
+  const char *name;
+  iaprivate *priv;
+  int (*open)(const char *datadir);
+  int (*close)(void);
 
-	iacontext* (*thread_new)(void);
-	void (*thread_dispose)(iacontext*);
+  iacontext *(*thread_new)(void);
+  void (*thread_dispose)(iacontext *);
 
-	int (*begin)(iacontext*, iabenchmark);
-	int (*next)(iacontext*, iabenchmark, iakv *kv);
-	int (*done)(iacontext*, iabenchmark);
+  int (*begin)(iacontext *, iabenchmark);
+  int (*next)(iacontext *, iabenchmark, iakv *kv);
+  int (*done)(iacontext *, iabenchmark);
 };
 
 #endif
