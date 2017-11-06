@@ -47,7 +47,7 @@ static int ia_mdbx_open(const char *datadir) {
   const size_t giga = mega << 10;
   /* FIXME: define values via command-line args */
   rc = mdbx_env_set_geometry(
-      self->env, 1 * mega /* size_lower */, 64 * мега /* size_now */,
+      self->env, 1 * mega /* size_lower */, 64 * mega /* size_now */,
       128 * giga /* size_upper */, 64 * mega /* growth_step */,
       64 * mega /* shrink_threshold */, 4 * kilo /* pagesize */);
   if (rc != MDBX_SUCCESS)
