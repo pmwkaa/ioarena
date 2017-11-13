@@ -41,15 +41,12 @@ static int ia_rocksdb_open(const char *datadir) {
   switch (ioarena.conf.syncmode) {
   case IA_SYNC:
     rocksdb_writeoptions_set_sync(self->wopts, 1);
-    rocksdb_options_set_disable_data_sync(self->opts, 0);
+    rocksdb_options_set_use_fsync(self->opts, 1);
     break;
   case IA_LAZY:
-    rocksdb_writeoptions_set_sync(self->wopts, 0);
-    rocksdb_options_set_disable_data_sync(self->opts, 0);
-    break;
   case IA_NOSYNC:
     rocksdb_writeoptions_set_sync(self->wopts, 0);
-    rocksdb_options_set_disable_data_sync(self->opts, 1);
+    rocksdb_options_set_use_fsync(self->opts, 0);
     break;
   default:
     ia_log("error: %s(): unsupported syncmode %s", __func__,
