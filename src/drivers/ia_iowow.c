@@ -163,8 +163,13 @@ static int ia_iowow_next(iacontext *ctx, iabenchmark step, iakv *kv) {
     k.data = kv->k;
     k.size = kv->ksize;
     rc = iwkv_get(db, &k, &v);
-    RCGO(rc, finish);
-    iwkv_val_dispose(&v);
+    if (rc == IWKV_ERROR_NOTFOUND) {
+      rc = 0;
+      rci = ENOENT;
+    } else {
+      RCGO(rc, finish);
+      iwkv_val_dispose(&v);
+    }
     break;
 
   case IA_ITERATE:
