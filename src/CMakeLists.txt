@@ -71,6 +71,10 @@ if (HAVE_VEDISDB)
   set(ia_libraries ${ia_libraries} vedisDB)
 endif (HAVE_VEDISDB)
 
+if (HAVE_IOWOW)
+  set(ia_src ${ia_src} drivers/ia_iowow.c)
+endif (HAVE_IOWOW)
+
 add_executable(${ia_binary} ${ia_src})
 add_dependencies(${ia_binary} build_libs)
 

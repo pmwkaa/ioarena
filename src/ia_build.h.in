@@ -26,6 +26,7 @@
 #cmakedefine01 HAVE_SQLITE3
 #cmakedefine01 HAVE_EJDB
 #cmakedefine01 HAVE_VEDISDB
+#cmakedefine01 HAVE_IOWOW
 
 extern iadriver ia_dummy;
 extern iadriver ia_debug;
@@ -59,6 +60,9 @@ extern iadriver ia_ejdb;
 #endif
 #if HAVE_VEDISDB
 extern iadriver ia_vedisdb;
+#endif
+#if HAVE_IOWOW
+extern iadriver ia_iowow;
 #endif
 
 static inline iadriver *ia_get_driver_for(char *name) {
@@ -118,6 +122,11 @@ static inline iadriver *ia_get_driver_for(char *name) {
     return &ia_vedisdb;
   }
 #endif
+#if HAVE_IOWOW
+  if (strcasecmp(name, "iowow") == 0) {
+    return &ia_iowow;
+  }
+#endif
   return NULL;
 }
 
@@ -163,6 +172,10 @@ static inline char *ia_supported(void) {
 #if HAVE_VEDISDB
   len += snprintf(list + len, sizeof(list) - len, "%svedisdb",
                   (len > 0) ? ", " : "");
+#endif
+#if HAVE_IOWOW
+  len +=
+      snprintf(list + len, sizeof(list) - len, "%siowow", (len > 0) ? ", " : "");
 #endif
 
   len += snprintf(list + len, sizeof(list) - len, "%sdummy",

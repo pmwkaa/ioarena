@@ -26,3 +26,6 @@
 [submodule "db/vedis"]
 	path = db/vedis
 	url = https://github.com/symisc/vedis.git
+[submodule "db/iowow"]
+	path = db/iowow
+	url = https://github.com/Softmotions/iowow.git
