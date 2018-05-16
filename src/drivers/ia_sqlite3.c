@@ -291,6 +291,7 @@ static int ia_sqlite3_next(iacontext *ctx, iabenchmark step, iakv *kv) {
       goto bailout;
     }
     rc = 0;
+    break;
   case IA_ITERATE:
     rc = ENOSYS;
     break;

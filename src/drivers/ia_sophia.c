@@ -55,6 +55,7 @@ static int ia_sophia_open(const char *datadir) {
     sp_setint(self->env, "log.sync", 0);
     sp_setint(self->env, "log.rotate_sync", 0);
     sp_setint(self->env, "db.test.sync", 1);
+    break;
   case IA_NOSYNC:
     sp_setint(self->env, "log.sync", 0);
     sp_setint(self->env, "log.rotate_sync", 0);
