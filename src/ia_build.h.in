@@ -174,8 +174,8 @@ static inline char *ia_supported(void) {
                   (len > 0) ? ", " : "");
 #endif
 #if HAVE_IOWOW
-  len +=
-      snprintf(list + len, sizeof(list) - len, "%siowow", (len > 0) ? ", " : "");
+  len += snprintf(list + len, sizeof(list) - len, "%siowow",
+                  (len > 0) ? ", " : "");
 #endif
 
   len += snprintf(list + len, sizeof(list) - len, "%sdummy",
