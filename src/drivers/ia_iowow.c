@@ -168,6 +168,7 @@ static int ia_iowow_next(iacontext *ctx, iabenchmark step, iakv *kv) {
       rci = ENOENT;
     } else {
       RCGO(rc, finish);
+      kv->vsize = v.size;
       iwkv_val_dispose(&v);
     }
     break;
