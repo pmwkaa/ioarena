@@ -170,6 +170,19 @@ if (ENABLE_VEDISDB)
   include_directories(${VEDISDB_INCLUDE_DIRS})
 endif(ENABLE_VEDISDB)
 
+# IOWOW
+option(ENABLE_IOWOW "Enable IOWOW" OFF)
+if (ENABLE_IOWOW)
+  find_package(IOWOW QUIET)
+  if (NOT IOWOW_FOUND)
+    include(BuildIOWOW)
+    build_iowow()
+  endif (NOT IOWOW_FOUND)
+  set(HAVE_IOWOW 1)
+  set(ia_libraries ${ia_libraries} ${IOWOW_LIBRARIES})
+  include_directories(${IOWOW_INCLUDE_DIRS})
+endif(ENABLE_IOWOW)
+
 message (STATUS "")
 message (STATUS "IOARENA: embedded storage benchmarking.")
 
@@ -184,6 +197,7 @@ message (STATUS "ENABLE_MDBX:       ${ENABLE_MDBX}")
 message (STATUS "ENABLE_SQLITE3:    ${ENABLE_SQLITE3}")
 message (STATUS "ENABLE_EJDB:       ${ENABLE_EJDB}")
 message (STATUS "ENABLE_VEDISDB:    ${ENABLE_VEDISDB}")
+message (STATUS "ENABLE_IOWOW:      ${ENABLE_IOWOW}")
 message (STATUS "")
 
 #message (STATUS "NB_PROCESSOR: ${NB_PROCESSOR}")
