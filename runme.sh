@@ -22,6 +22,7 @@ mkdir -p $DIR && \
 	-DENABLE_SQLITE3=ON \
 	-DENABLE_EJDB=ON \
 	-DENABLE_VEDISDB=ON \
+	-DENABLE_IOWOW=ON \
 	) || exit 1
 
 echo "*** run make..."
