@@ -202,12 +202,12 @@ static int ia_wiredtiger_done(iacontext *ctx, iabenchmark step) {
         goto bailout;
       ctx->transaction = 0;
     }
-
+    /* fallthrough */
   case IA_DELETE:
   case IA_SET:
     if (self->need_checkpoints && rc == 0)
       rc = ctx->session->checkpoint(ctx->session, NULL);
-
+    /* fallthrough */
   case IA_ITERATE:
   case IA_GET:
     break;
