@@ -4,7 +4,7 @@
  * Copyright (c) Dmitry Simonenko
  * Copyright (c) Leonid Yuriev
  * BSD License
-*/
+ */
 
 #include "ioarena.h"
 
@@ -16,10 +16,23 @@ static const uintmax_t ia_histogram_buckets[ST_HISTOGRAM_COUNT] = {
   M * 12, M * 14, M * 16, M * 18, M * 20, M * 25, M * 30, M * 35, M * 40,      \
       M * 45, M * 50, M * 60, M * 70, M * 80, M * 90, M * 100
 
-    9, LINE_12_100(1), LINE_12_100(10), LINE_12_100(100), LINE_12_100(US),
-    LINE_12_100(US * 10), LINE_12_100(US * 100), LINE_12_100(MS),
-    LINE_12_100(MS * 10), LINE_12_100(MS * 100), LINE_12_100(S), S * 5 * 60,
-    S * 30 * 60, S * 3600 * 4, S * 3600 * 8, S * 3600 * 24, ~0ull
+    9,
+    LINE_12_100(1),
+    LINE_12_100(10),
+    LINE_12_100(100),
+    LINE_12_100(US),
+    LINE_12_100(US * 10),
+    LINE_12_100(US * 100),
+    LINE_12_100(MS),
+    LINE_12_100(MS * 10),
+    LINE_12_100(MS * 100),
+    LINE_12_100(S),
+    S * 5 * 60,
+    S * 30 * 60,
+    S * 3600 * 4,
+    S * 3600 * 8,
+    S * 3600 * 24,
+    ~0ull
 
 #undef LINE_12_100
 };
@@ -174,9 +187,10 @@ int ia_histogram_checkpoint(ia_timestamp_t now) {
         continue;
 
       const char *name = ia_benchmarkof(h->bench);
-      s += snprintf(s, line + sizeof(line) - s, " | bench      rps      min    "
-                                                "   avg       rms       max    "
-                                                "   vol           #N");
+      s += snprintf(s, line + sizeof(line) - s,
+                    " | bench      rps      min    "
+                    "   avg       rms       max    "
+                    "   vol           #N");
       if (global.csv_timeline)
         fprintf(global.csv_timeline,
                 ",\t%s_rps,\t%s_min,\t%s_avg,\t%s_rms,\t%s_max", name, name,
@@ -231,9 +245,10 @@ int ia_histogram_checkpoint(ia_timestamp_t now) {
       s += snpf_val(s, line + sizeof(line) - s, bps, "bps");
       s += snpf_val(s, line + sizeof(line) - s, h->acc.n, "");
     } else {
-      s += snprintf(s, line + sizeof(line) - s, "        -        -         -  "
-                                                "       -         -         -  "
-                                                "         - ");
+      s += snprintf(s, line + sizeof(line) - s,
+                    "        -        -         -  "
+                    "       -         -         -  "
+                    "         - ");
       if (global.csv_timeline) {
         fprintf(global.csv_timeline, ",\t\t,\t\t,\t\t,\t\t");
       }

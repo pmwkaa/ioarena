@@ -4,7 +4,7 @@
  *
  * Copyright (c) ioarena authors
  * BSD License
-*/
+ */
 
 #include "ioarena.h"
 
@@ -41,7 +41,7 @@ static void ia_timestamp_init(void) {
 ia_timestamp_t ia_timestamp_ns(void) {
 #if defined(CLOCK_MONOTONIC_RAW) || defined(CLOCK_MONOTONIC) ||                \
     defined(CLOCK_REALTIME)
-/* LY: POSIX.1-2001 */
+  /* LY: POSIX.1-2001 */
 
 #if defined(CLOCK_MONOTONIC_RAW)
 #define CLOCK_ID CLOCK_MONOTONIC_RAW

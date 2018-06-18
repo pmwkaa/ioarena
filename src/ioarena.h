@@ -7,7 +7,7 @@
  *
  * Copyright (c) ioarena authors
  * BSD License
-*/
+ */
 
 #define _GNU_SOURCE 1
 

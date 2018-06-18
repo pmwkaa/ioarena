@@ -5,7 +5,7 @@
  * Copyright (c) Dmitry Simonenko
  * Copyright (c) Leonid Yuriev
  * BSD License
-*/
+ */
 
 #include "ioarena.h"
 #include "mdbx.h"

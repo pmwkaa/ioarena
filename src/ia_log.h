@@ -7,7 +7,7 @@
  *
  * Copyright (c) ioarena authors
  * BSD License
-*/
+ */
 
 void ia_vlog(char *, va_list);
 

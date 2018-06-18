@@ -7,7 +7,7 @@
  *
  * Copyright (c) ioarena authors
  * BSD License
-*/
+ */
 
 typedef struct iadriver iadriver;
 typedef struct iaprivate iaprivate;

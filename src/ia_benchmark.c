@@ -4,7 +4,7 @@
  *
  * Copyright (c) ioarena authors
  * BSD License
-*/
+ */
 
 #include "ioarena.h"
 
@@ -95,8 +95,9 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench) {
         rc = ia_quadruple(doer, &a, &b);
       if (!rc)
         rc = ioarena.driver->done(doer->ctx, IA_CRUD);
-      ia_histogram_add(&doer->hg, t0, a.ksize + a.vsize + b.ksize + b.vsize +
-                                          a.ksize + b.ksize + b.vsize);
+      ia_histogram_add(&doer->hg, t0,
+                       a.ksize + a.vsize + b.ksize + b.vsize + a.ksize +
+                           b.ksize + b.vsize);
       if (rc)
         goto bailout;
       ++i;
@@ -121,9 +122,10 @@ static int ia_run_benchmark(iadoer *doer, iabenchmark bench) {
       }
       if (!rc)
         rc = ioarena.driver->done(doer->ctx, IA_BATCH);
-      ia_histogram_add(&doer->hg, t0, (a.ksize + a.vsize + b.ksize + b.vsize +
-                                       a.ksize + b.ksize + b.vsize) *
-                                          ioarena.conf.batch_length);
+      ia_histogram_add(&doer->hg, t0,
+                       (a.ksize + a.vsize + b.ksize + b.vsize + a.ksize +
+                        b.ksize + b.vsize) *
+                           ioarena.conf.batch_length);
       if (rc)
         goto bailout;
       break;

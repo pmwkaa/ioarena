@@ -4,7 +4,7 @@
  *
  * Copyright (c) ioarena authors
  * BSD License
-*/
+ */
 
 #include "ioarena.h"
 #include "rocksdb/c.h"

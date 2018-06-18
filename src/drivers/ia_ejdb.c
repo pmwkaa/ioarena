@@ -4,7 +4,7 @@
  *
  * Copyright (c) ioarena authors
  * BSD License
-*/
+ */
 
 #include "ejdb.h"
 #include "ioarena.h"

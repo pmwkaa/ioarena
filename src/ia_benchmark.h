@@ -7,7 +7,7 @@
  *
  * Copyright (c) ioarena authors
  * BSD License
-*/
+ */
 
 extern const long bench_mask_read;
 extern const long bench_mask_write;

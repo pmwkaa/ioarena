@@ -3,7 +3,7 @@
  *
  * Copyright (c) ioarena authors
  * BSD License
-*/
+ */
 
 #include "ioarena.h"
 #include <sqlite3.h> // external header
@@ -94,8 +94,9 @@ static int ia_sqlite3_open(const char *datadir) {
 
   // rc = sqlite3_exec(self->db, "CREATE TABLE IF NOT EXISTS benchmark_t(id
   // INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT, value BLOB)", 0, 0, &zErrMsg);
-  rc = sqlite3_exec(self->db, "CREATE TABLE IF NOT EXISTS benchmark_t(key TEXT "
-                              "PRIMARY KEY, value BLOB)",
+  rc = sqlite3_exec(self->db,
+                    "CREATE TABLE IF NOT EXISTS benchmark_t(key TEXT "
+                    "PRIMARY KEY, value BLOB)",
                     0, 0, &zErrMsg);
   if (rc != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", zErrMsg);

@@ -6,7 +6,7 @@
  * Copyright (c) Dmitry Simonenko
  * Copyright (c) Leonid Yuriev
  * BSD License
-*/
+ */
 
 typedef struct iarusage iarusage;
 

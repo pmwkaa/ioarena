@@ -7,7 +7,7 @@
  *
  * Copyright (c) ioarena authors
  * BSD License
-*/
+ */
 
 typedef uintmax_t ia_timestamp_t;
 ia_timestamp_t ia_timestamp_ns(void);
