@@ -29,3 +29,6 @@
 [submodule "db/iowow"]
 	path = db/iowow
 	url = https://github.com/Softmotions/iowow.git
+[submodule "db/upscaledb"]
+	path = db/upscaledb
+	url = https://github.com/cruppstahl/upscaledb.git

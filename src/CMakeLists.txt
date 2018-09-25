@@ -62,6 +62,10 @@ if (HAVE_EJDB)
   set(ia_src ${ia_src} drivers/ia_ejdb.c)
 endif (HAVE_EJDB)
 
+if (HAVE_UPSCALEDB)
+  set(ia_src ${ia_src} drivers/ia_upscaledb.c)
+endif (HAVE_UPSCALEDB)
+
 if (HAVE_VEDISDB)
   add_library(vedisDB SHARED ../db/vedis/vedis.c)
   set_property(TARGET vedisDB APPEND_STRING PROPERTY COMPILE_FLAGS " -DVEDIS_ENABLE_THREADS -Wno-error -std=gnu89")
