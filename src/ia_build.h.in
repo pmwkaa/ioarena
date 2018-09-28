@@ -25,6 +25,7 @@
 #cmakedefine01 HAVE_FORESTDB
 #cmakedefine01 HAVE_SQLITE3
 #cmakedefine01 HAVE_EJDB
+#cmakedefine01 HAVE_UNQLITE
 #cmakedefine01 HAVE_UPSCALEDB
 #cmakedefine01 HAVE_VEDISDB
 #cmakedefine01 HAVE_IOWOW
@@ -58,6 +59,9 @@ extern iadriver ia_sqlite3;
 #endif
 #if HAVE_EJDB
 extern iadriver ia_ejdb;
+#endif
+#if HAVE_UNQLITE
+extern iadriver ia_unqlite;
 #endif
 #if HAVE_UPSCALEDB
 extern iadriver ia_upscaledb;
@@ -121,6 +125,11 @@ static inline iadriver *ia_get_driver_for(char *name) {
     return &ia_ejdb;
   }
 #endif
+#if HAVE_UNQLITE
+  if (strcasecmp(name, "unqlite") == 0) {
+    return &ia_unqlite;
+  }
+#endif
 #if HAVE_UPSCALEDB
   if (strcasecmp(name, "upscaledb") == 0) {
     return &ia_upscaledb;
@@ -177,6 +186,10 @@ static inline char *ia_supported(void) {
 #if HAVE_EJDB
   len +=
       snprintf(list + len, sizeof(list) - len, "%sejdb", (len > 0) ? ", " : "");
+#endif
+#if HAVE_UNQLITE
+  len += snprintf(list + len, sizeof(list) - len, "%sunqlite",
+                  (len > 0) ? ", " : "");
 #endif
 #if HAVE_UPSCALEDB
   len += snprintf(list + len, sizeof(list) - len, "%supscaledb",
