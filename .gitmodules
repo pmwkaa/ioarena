@@ -32,3 +32,6 @@
 [submodule "db/upscaledb"]
 	path = db/upscaledb
 	url = https://github.com/cruppstahl/upscaledb.git
+[submodule "db/unqlite"]
+	path = db/unqlite
+	url = https://github.com/symisc/unqlite.git

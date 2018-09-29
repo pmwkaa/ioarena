@@ -62,6 +62,10 @@ if (HAVE_EJDB)
   set(ia_src ${ia_src} drivers/ia_ejdb.c)
 endif (HAVE_EJDB)
 
+if (HAVE_UNQLITE)
+  set(ia_src ${ia_src} drivers/ia_unqlite.c)
+endif (HAVE_UNQLITE)
+
 if (HAVE_UPSCALEDB)
   set(ia_src ${ia_src} drivers/ia_upscaledb.c)
 endif (HAVE_UPSCALEDB)
