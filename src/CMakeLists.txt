@@ -58,10 +58,6 @@ if (HAVE_SQLITE3)
   set(ia_src ${ia_src} drivers/ia_sqlite3.c)
 endif (HAVE_SQLITE3)
 
-if (HAVE_EJDB)
-  set(ia_src ${ia_src} drivers/ia_ejdb.c)
-endif (HAVE_EJDB)
-
 if (HAVE_UNQLITE)
   set(ia_src ${ia_src} drivers/ia_unqlite.c)
 endif (HAVE_UNQLITE)

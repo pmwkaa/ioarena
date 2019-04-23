@@ -18,7 +18,7 @@ Sync modes: *sync*, *lazy*, *no-sync*
 WAL modes: *indef* (per engine default), *wal-on*, *wal-off*
 
 Supported databases: **rocksdb**, **leveldb**, **forestdb**, **upscaledb**, **lmdb**,
-**mdbx**, **wiredtiger**, **sophia**, **sqlite3**, **ejdb**, **iowow**
+**mdbx**, **wiredtiger**, **sophia**, **sqlite3**, **iowow**
 
 *New drivers or any kind of enhancements are very welcome!*
 
@@ -30,7 +30,7 @@ IOARENA (embedded storage benchmarking)
 
 usage: ioarena [hDBCpnkvmlrwic]
   -D <database_driver>
-     choices: sophia, leveldb, rocksdb, wiredtiger, forestdb, lmdb, mdbx, sqlite3, ejdb, iowow, dummy
+     choices: sophia, leveldb, rocksdb, wiredtiger, forestdb, lmdb, mdbx, sqlite3, iowow, dummy
   -B <benchmarks>
      choices: set, get, delete, iterate, batch, crud
   -m <sync_mode>                     (default: lazy)
