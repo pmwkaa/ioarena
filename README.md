@@ -30,7 +30,7 @@ IOARENA (embedded storage benchmarking)
 
 usage: ioarena [hDBCpnkvmlrwic]
   -D <database_driver>
-     choices: sophia, leveldb, rocksdb, wiredtiger, forestdb, lmdb, mdbx, sqlite3, iowow, dummy
+     choices: sophia, leveldb, rocksdb, wiredtiger, forestdb, lmdb, mdbx, sqlite3, iowow, dummy, unqlite
   -B <benchmarks>
      choices: set, get, delete, iterate, batch, crud
   -m <sync_mode>                     (default: lazy)
