@@ -9,6 +9,11 @@
 #include "ioarena.h"
 #include <math.h>
 
+#ifdef __APPLE__
+#include <architecture/byte_order.h>
+#define htole64(x) OSSwapHostToLittleInt64(x)
+#endif
+
 /* #define DEBUG_KEYGEN 1 */
 
 #ifndef DEBUG_KEYGEN
