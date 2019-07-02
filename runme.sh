@@ -6,7 +6,7 @@ git submodule update --init --recursive
 
 echo "*** cleanup..."
 git clean -x -f -d
-git submodule foreach --recursive git clean -x -f -d
+git submodule foreach --recursive 'git clean -x -f -d'
 
 DIR=@BUILD
 echo "*** run cmake..."
