@@ -22,7 +22,7 @@ macro(build_rocksdb)
     DEPENDS ${PROJECT_BINARY_DIR}/db/rocksdb/librocksdb${CMAKE_SHARED_LIBRARY_SUFFIX}
     )
   message(STATUS "Use shipped RocksDB: ${PROJECT_SOURCE_DIR}/db/rocksdb")
-  set (ROCKSDB_LIBRARIES "${PROJECT_BINARY_DIR}/db/rocksdb/librocksdb${CMAKE_SHARED_LIBRARY_SUFFIX}" bz2 z lz4 snappy)
+  set (ROCKSDB_LIBRARIES "${PROJECT_BINARY_DIR}/db/rocksdb/librocksdb${CMAKE_SHARED_LIBRARY_SUFFIX}" bz2 z lz4 snappy tbb)
   set (ROCKSDB_FOUND 1)
   add_dependencies(build_libs librocksdb)
 endmacro(build_rocksdb)
