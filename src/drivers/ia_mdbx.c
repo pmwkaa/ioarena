@@ -26,12 +26,6 @@ static int ia_mdbx_open(const char *datadir) {
   unsigned modeflags;
   iadriver *drv = ioarena.driver;
 
-  ia_log("NOTE: Currently MDBX don't have any releases and include a few "
-         "additional checks, TODOs and bottlenecks.\n"
-         "Please wait for the release to compare performance and set of "
-         "features.\n"
-         "https://github.com/leo-yuriev/libmdbx\n");
-
   drv->priv = calloc(1, sizeof(iaprivate));
   if (drv->priv == NULL)
     return -1;
@@ -80,7 +74,7 @@ static int ia_mdbx_open(const char *datadir) {
     return -1;
   }
 
-  rc = mdbx_env_open(self->env, datadir, modeflags | MDBX_NORDAHEAD, 0644);
+  rc = mdbx_env_open(self->env, datadir, modeflags, 0644);
   if (rc != MDBX_SUCCESS)
     goto bailout;
   return 0;
