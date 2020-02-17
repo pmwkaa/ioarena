@@ -19,7 +19,7 @@
 	url = https://github.com/pmwkaa/sophia
 [submodule "db/mdbx"]
 	path = db/mdbx
-	url = https://github.com/leo-yuriev/libmdbx.git
+	url = https://abf.io/erthink/libmdbx.git
 [submodule "db/vedis"]
 	path = db/vedis
 	url = https://github.com/symisc/vedis.git
