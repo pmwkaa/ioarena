@@ -12,7 +12,7 @@
 	url = https://github.com/wiredtiger/wiredtiger
 [submodule "db/lmdb"]
 	path = db/lmdb
-	url = http://www.openldap.org/software/repo/openldap.git
+	url = https://github.com/LMDB/lmdb.git
 	branch = mdb.master
 [submodule "db/sophia"]
 	path = db/sophia
