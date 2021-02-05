@@ -18,11 +18,6 @@ set(ia_src
   drivers/ia_dummy.c
   )
 
-if(THREADS_HAVE_PTHREAD_ARG)
-  set_property(TARGET ${ia_binary} PROPERTY COMPILE_OPTIONS "-pthread")
-  set_property(TARGET ${ia_binary} PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
-endif()
-
 include_directories("${PROJECT_SOURCE_DIR}/src")
 include_directories("${PROJECT_BINARY_DIR}/src")
 
@@ -81,6 +76,11 @@ endif (HAVE_IOWOW)
 
 add_executable(${ia_binary} ${ia_src})
 add_dependencies(${ia_binary} build_libs)
+
+if(THREADS_HAVE_PTHREAD_ARG)
+  set_property(TARGET ${ia_binary} PROPERTY COMPILE_OPTIONS "-pthread")
+  set_property(TARGET ${ia_binary} PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
+endif()
 
 target_link_libraries(${ia_binary} ${ia_libraries} m "${CMAKE_THREAD_LIBS_INIT}")
 if (NOT APPLE)
