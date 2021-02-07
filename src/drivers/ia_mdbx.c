@@ -112,7 +112,7 @@ static iacontext *ia_mdbx_thread_new(void) {
   if (self->dbi == INVALID_DBI) {
     /* just bind thread to DB */
     MDBX_txn *txn = NULL;
-    rc = mdbx_txn_begin(self->env, NULL, MDBX_RDONLY, &txn);
+    rc = mdbx_txn_begin(self->env, NULL, MDBX_TXN_RDONLY, &txn);
     if (rc != MDBX_SUCCESS)
       goto bailout;
 
@@ -191,7 +191,7 @@ static int ia_mdbx_begin(iacontext *ctx, iabenchmark step) {
       }
     }
     if (ctx->txn == NULL) {
-      rc = mdbx_txn_begin(self->env, NULL, MDBX_RDONLY, &ctx->txn);
+      rc = mdbx_txn_begin(self->env, NULL, MDBX_TXN_RDONLY, &ctx->txn);
       if (rc != MDBX_SUCCESS)
         goto bailout;
     }
