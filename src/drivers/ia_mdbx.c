@@ -135,9 +135,13 @@ static int ia_mdbx_open(const char *datadir) {
 
   switch (ioarena.conf.walmode) {
   case IA_WAL_INDEF:
+    break;
   case IA_WAL_OFF:
+    modeflags &= ~MDBX_NOMETASYNC;
     break;
   case IA_WAL_ON:
+    modeflags |= MDBX_NOMETASYNC;
+    break;
   default:
     ia_log("error: %s(): unsupported walmode %s", __func__,
            ia_walmode2str(ioarena.conf.walmode));
