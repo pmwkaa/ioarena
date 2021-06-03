@@ -36,7 +36,7 @@ static iacontext *ia_debug_thread_new() {
   return ctx;
 }
 
-void ia_debug_thread_dispose(iacontext *ctx) {
+static void ia_debug_thread_dispose(iacontext *ctx) {
   iadriver *drv = ioarena.driver;
   printf("%s.thread_dispose(%p)\n", drv->name, ctx);
   free(ctx);

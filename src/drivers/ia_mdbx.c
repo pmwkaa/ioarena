@@ -135,7 +135,7 @@ bailout:
   return NULL;
 }
 
-void ia_mdbx_thread_dispose(iacontext *ctx) {
+static void ia_mdbx_thread_dispose(iacontext *ctx) {
   if (ctx->cursor)
     mdbx_cursor_close(ctx->cursor);
   if (ctx->txn) {

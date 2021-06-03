@@ -62,7 +62,7 @@ static int ia_unqlite_close(void) {
   return 0;
 }
 
-void ia_unqlite_thread_dispose(iacontext *ctx) {
+static void ia_unqlite_thread_dispose(iacontext *ctx) {
   iaprivate *self = ioarena.driver->priv;
   if (ctx->cursor)
     unqlite_kv_cursor_release(self->db, ctx->cursor);

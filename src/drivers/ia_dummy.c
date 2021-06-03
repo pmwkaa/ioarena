@@ -34,7 +34,7 @@ static iacontext *ia_dummy_thread_new() {
   return ctx;
 }
 
-void ia_dummy_thread_dispose(iacontext *ctx) { free(ctx); }
+static void ia_dummy_thread_dispose(iacontext *ctx) { free(ctx); }
 
 static int ia_dummy_begin(iacontext *ctx, iabenchmark step) {
   int rc;

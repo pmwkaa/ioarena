@@ -99,7 +99,7 @@ static int ia_rocksdb_close(void) {
   return 0;
 }
 
-void ia_rocksdb_thread_dispose(iacontext *ctx) {
+static void ia_rocksdb_thread_dispose(iacontext *ctx) {
   if (ctx->result)
     free(ctx->result);
   if (ctx->it)

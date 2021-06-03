@@ -84,7 +84,7 @@ static int ia_upscaledb_close(void) {
   return 0;
 }
 
-void ia_upscaledb_thread_dispose(iacontext *ctx) {
+static void ia_upscaledb_thread_dispose(iacontext *ctx) {
   if (ctx->cursor)
     ups_cursor_close(ctx->cursor);
   if (ctx->txn)
