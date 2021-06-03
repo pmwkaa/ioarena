@@ -1,5 +1,4 @@
-﻿
-/*
+﻿/*
  * ioarena: embedded storage benchmarking
  *
  * Copyright (c) Dmitry Simonenko
@@ -12,6 +11,7 @@
 int ia_configinit(iaconfig *c) {
   c->driver = NULL;
   c->driver_if = NULL;
+  c->drv_opts = NULL;
   c->path = strdup("./_ioarena");
   if (c->path == NULL)
     return -1;
@@ -98,6 +98,11 @@ static inline void ia_configusage(iaconfig *c) {
   ia_log("  -l <wal_mode>                      (default: %s)",
          ia_walmode2str(c->walmode));
   ia_log("     choices: indef, walon, waloff");
+  if (c->driver_if) {
+    if (c->driver_if->option)
+      c->driver_if->option(NULL, "--help");
+  } else
+    ia_log("  -o <database_option>");
   ia_log("  -C <name-prefix> generate csv      (default: %s)", c->csv_prefix);
   ia_log("  -p <path> for temporaries          (default: %s)", c->path);
   ia_log("  -n <number_of_operations>          (default: %ju)", c->count);
@@ -119,7 +124,8 @@ static inline void ia_configusage(iaconfig *c) {
 
 int ia_configparse(iaconfig *c, int argc, char **argv) {
   int opt;
-  while ((opt = getopt(argc, argv, "hD:T:B:p:n:k:v:C:m:l:r:w:ic")) != -1) {
+  struct iaoption **drv_opt /* the tail of single-linked list */ = &c->drv_opts;
+  while ((opt = getopt(argc, argv, "hD:T:B:p:n:k:v:C:m:l:r:w:ico:")) != -1) {
     switch (opt) {
     case 'D':
       if (c->driver)
@@ -127,6 +133,20 @@ int ia_configparse(iaconfig *c, int argc, char **argv) {
       c->driver = strdup(optarg);
       if (c->driver == NULL)
         return -1;
+      c->driver_if = ia_get_driver_for(c->driver);
+      if (c->driver_if == NULL) {
+        ia_log("error: unknown database driver '%s'", c->driver);
+        return -1;
+      }
+      break;
+    case 'o':
+      *drv_opt = calloc(1, sizeof(struct iaoption));
+      if (!*drv_opt)
+        return -1;
+      (*drv_opt)->arg = strdup(optarg);
+      if (!(*drv_opt)->arg)
+        return -1;
+      drv_opt = &(*drv_opt)->next;
       break;
     case 'T':
     case 'B':
@@ -199,9 +219,8 @@ int ia_configparse(iaconfig *c, int argc, char **argv) {
     ia_configusage(c);
     return -1;
   }
-  c->driver_if = ia_get_driver_for(c->driver);
-  if (c->driver_if == NULL) {
-    ia_log("error: unknown database driver '%s'", c->driver);
+  if (c->drv_opts && !c->driver_if->option) {
+    ia_log("error: database driver '%s' don't support option(s)", c->driver);
     return -1;
   }
   if (c->ksize <= 0) {
@@ -229,6 +248,12 @@ void ia_configfree(iaconfig *c) {
     free(c->driver);
   if (c->benchmark)
     free(c->benchmark);
+  for (struct iaoption *drv_opt = c->drv_opts; drv_opt;) {
+    void *tmp = drv_opt;
+    free((void *)drv_opt->arg);
+    drv_opt = drv_opt->next;
+    free(tmp);
+  }
 }
 
 void ia_configprint(iaconfig *c) {
@@ -238,6 +263,8 @@ void ia_configprint(iaconfig *c) {
   ia_log("  benchmark    = %s", c->benchmark);
   ia_log("  durability   = %s", ia_syncmode2str(c->syncmode));
   ia_log("  wal          = %s", ia_walmode2str(c->walmode));
+  for (struct iaoption *drv_opt = c->drv_opts; drv_opt; drv_opt = drv_opt->next)
+    ia_log("          option %s", drv_opt->arg);
   ia_log("  operations   = %ju", c->count);
   ia_log("  key size     = %d", c->ksize);
   ia_log("  value size   = %d", c->vsize);
@@ -284,4 +311,22 @@ iabenchmark ia_benchmark(const char *name) {
   else if (strcasecmp(name, "crud") == 0 || strcasecmp(name, "transact") == 0)
     return IA_CRUD;
   return IA_MAX;
+}
+
+int ia_parse_option_bool(const char *arg, const char *opt, int8_t *target) {
+  const size_t len = strlen(opt);
+  if (strncasecmp(arg, opt, len) != 0 || arg[len] != '=')
+    return 0;
+  const char *value = arg + len + 1;
+  if (strcasecmp(value, "ON") == 0 || strcasecmp(value, "YES") == 0 ||
+      strcasecmp(value, "TRUE") == 0 || strcasecmp(value, "1") == 0) {
+    *target = ia_opt_bool_on;
+    return 1;
+  }
+  if (strcasecmp(value, "OFF") == 0 || strcasecmp(value, "NO") == 0 ||
+      strcasecmp(value, "FALSE") == 0 || strcasecmp(value, "0") == 0) {
+    *target = ia_opt_bool_off;
+    return 1;
+  }
+  return -1;
 }

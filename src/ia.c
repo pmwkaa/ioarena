@@ -39,6 +39,16 @@ int ia_init(ia *a, int argc, char **argv) {
     return -1;
 
   a->before_open_ram = before_open.ram;
+  for (struct iaoption *drv_opt = a->conf.drv_opts; drv_opt;
+       drv_opt = drv_opt->next) {
+    rc = a->driver->option(NULL, drv_opt->arg);
+    if (rc) {
+      ia_log("error: driver '%s' reject/failed option `%s` globaly (error %d)",
+             a->driver->name, drv_opt->arg, rc);
+      return -1;
+    }
+  }
+
   rc = a->driver->open(a->datadir);
   if (rc == -1)
     return -1;

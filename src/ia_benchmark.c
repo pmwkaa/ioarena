@@ -169,6 +169,17 @@ int ia_doer_fulfil(iadoer *doer) {
       return -1;
   }
 
+  for (struct iaoption *drv_opt = ioarena.conf.drv_opts; drv_opt;
+       drv_opt = drv_opt->next) {
+    int rc = ioarena.driver->option(doer->ctx, drv_opt->arg);
+    if (rc) {
+      ia_log(
+          "error: driver '%s' reject/failed option `%s` for doer %d (error %d)",
+          ioarena.driver->name, drv_opt->arg, doer->nth, rc);
+      return -1;
+    }
+  }
+
   int count = 0, rc = 0;
   for (count = 0; count < ioarena.conf.nrepeat ||
                   (ioarena.conf.continuous_completing &&
