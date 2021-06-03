@@ -57,7 +57,7 @@ static int ia_mdbx_open(const char *datadir) {
 
   switch (ioarena.conf.syncmode) {
   case IA_SYNC:
-    modeflags = MDBX_LIFORECLAIM;
+    modeflags = MDBX_SYNC_DURABLE | MDBX_LIFORECLAIM;
     break;
   case IA_LAZY:
     modeflags = MDBX_SAFE_NOSYNC | MDBX_NOMETASYNC;
