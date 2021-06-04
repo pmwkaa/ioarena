@@ -273,7 +273,8 @@ void ia_configprint(iaconfig *c) {
     ia_log("  r-threads    = %d", c->rthr);
   if (c->wthr)
     ia_log("  w-threads    = %d", c->wthr);
-  ia_log("  batch length = %d", c->batch_length);
+  if (ia_benchmark(c->benchmark) == IA_BATCH || c->benchmark_list[IA_BATCH])
+    ia_log("  batch length = %d", c->batch_length);
   ia_log("  continuous   = %s\n", c->continuous_completing ? "yes" : "no");
 }
 
