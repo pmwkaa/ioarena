@@ -313,20 +313,33 @@ iabenchmark ia_benchmark(const char *name) {
   return IA_MAX;
 }
 
-int ia_parse_option_bool(const char *arg, const char *opt, int8_t *target) {
-  const size_t len = strlen(opt);
-  if (strncasecmp(arg, opt, len) != 0 || arg[len] != '=')
-    return 0;
-  const char *value = arg + len + 1;
-  if (strcasecmp(value, "ON") == 0 || strcasecmp(value, "YES") == 0 ||
-      strcasecmp(value, "TRUE") == 0 || strcasecmp(value, "1") == 0) {
+static int partmatch(const char *part, size_t part_len, const char *item) {
+  return part_len == strlen(item) && strncasecmp(part, item, part_len) == 0;
+}
+
+int ia_parse_option_bool(const char **parg, const char *opt, int8_t *target) {
+  const size_t name_len = strlen(opt);
+  if (strncasecmp(*parg, opt, name_len) != 0 || (*parg)[name_len] != '=')
+    return 0 /* don't match */;
+
+  const char *const value = *parg + name_len + 1;
+  const char *const comma = strchr(value, ',');
+  const size_t value_len = comma ? (size_t)(comma - value) : strlen(value);
+
+  if (partmatch(value, value_len, "ON") || partmatch(value, value_len, "YES") ||
+      partmatch(value, value_len, "TRUE") || partmatch(value, value_len, "1"))
     *target = ia_opt_bool_on;
-    return 1;
-  }
-  if (strcasecmp(value, "OFF") == 0 || strcasecmp(value, "NO") == 0 ||
-      strcasecmp(value, "FALSE") == 0 || strcasecmp(value, "0") == 0) {
+  else if (partmatch(value, value_len, "OFF") ||
+           partmatch(value, value_len, "NO") ||
+           partmatch(value, value_len, "FALSE") ||
+           partmatch(value, value_len, "0"))
     *target = ia_opt_bool_off;
-    return 1;
-  }
-  return -1;
+  else
+    return -1 /* invalid value */;
+
+  if (!comma)
+    return 1 /* done */;
+
+  *parg = comma + 1 /* seek after the comma */;
+  return **parg == '\0' /* continue if not at the end */;
 }

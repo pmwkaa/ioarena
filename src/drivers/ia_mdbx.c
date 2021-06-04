@@ -44,24 +44,27 @@ static int ia_mdbx_option(iacontext *ctx, const char *arg) {
     return 0;
   }
 
-  int parsed = ia_parse_option_bool(arg, "LIFORECLAIM", &globals.liforeclaim);
-  if (!parsed)
-    parsed = ia_parse_option_bool(arg, "COALESCE", &globals.coalesce);
-  if (!parsed)
-    parsed = ia_parse_option_bool(arg, "EXCLUSIVE", &globals.exclusive);
-  if (!parsed)
-    parsed = ia_parse_option_bool(arg, "PAGEPERTURB", &globals.pageperturb);
-  if (!parsed)
-    parsed = ia_parse_option_bool(arg, "NOMEMINIT", &globals.nomeminit);
-  if (!parsed)
-    parsed = ia_parse_option_bool(arg, "NORDAHEAD", &globals.nordahead);
-  if (!parsed)
-    parsed = ia_parse_option_bool(arg, "NOMETASYNC", &globals.nometasync);
-  if (parsed == 1)
-    return 0;
+  int done = 0;
+  while (*arg && !done) {
+    done = ia_parse_option_bool(&arg, "LIFORECLAIM", &globals.liforeclaim);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "COALESCE", &globals.coalesce);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "EXCLUSIVE", &globals.exclusive);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "PAGEPERTURB", &globals.pageperturb);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "NOMEMINIT", &globals.nomeminit);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "NORDAHEAD", &globals.nordahead);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "NOMETASYNC", &globals.nometasync);
+  }
 
+  if (done == 1)
+    return 0;
   ia_log("%s: invalid option or value `%s`", "mdbx", arg);
-  return parsed ? parsed : -1;
+  return done ? done : -1;
 }
 
 static int peek_option_bool(int dflt, int opt, int8_t from) {

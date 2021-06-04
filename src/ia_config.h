@@ -53,6 +53,6 @@ const char *ia_walmode2str(iawalmode walmode);
 #define ia_opt_bool_default 0
 #define ia_opt_bool_off -1
 #define ia_opt_bool_on 1
-int ia_parse_option_bool(const char *arg, const char *opt, int8_t *target);
+int ia_parse_option_bool(const char **parg, const char *opt, int8_t *target);
 
 #endif
