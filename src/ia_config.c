@@ -37,6 +37,11 @@ int ia_configinit(iaconfig *c) {
   c->walmode = IA_WAL_INDEF;
   c->continuous_completing = 0;
   c->nrepeat = 1;
+
+  c->kvseed = 42;
+  c->binary = 0;
+  c->separate = 0;
+  c->ignore_keynotfound = 0;
   return 0;
 }
 
