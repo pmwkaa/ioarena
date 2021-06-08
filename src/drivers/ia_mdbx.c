@@ -17,6 +17,71 @@ struct iaprivate {
 
 #define INVALID_DBI ((MDBX_dbi)-1)
 
+struct mdbx_opts {
+  int8_t liforeclaim;
+  int8_t coalesce;
+  int8_t exclusive;
+  int8_t pageperturb;
+  int8_t nomeminit;
+  int8_t nordahead;
+  int8_t nometasync;
+};
+
+static struct mdbx_opts globals;
+
+static int ia_mdbx_option(iacontext *ctx, const char *arg) {
+  if (ctx)
+    return 0 /* no any non-global options */;
+
+  if (strcmp(arg, "--help") == 0) {
+    ia_log("  -o %s=<ON|OFF>", "LIFORECLAIM");
+    ia_log("  -o %s=<ON|OFF>", "COALESCE");
+    ia_log("  -o %s=<ON|OFF>", "EXCLUSIVE");
+    ia_log("  -o %s=<ON|OFF>", "PAGEPERTURB");
+    ia_log("  -o %s=<ON|OFF>", "NOMEMINIT");
+    ia_log("  -o %s=<ON|OFF>", "NORDAHEAD");
+    ia_log("  -o %s=<ON|OFF>", "NOMETASYNC");
+    return 0;
+  }
+
+  int done = 0;
+  while (*arg && !done) {
+    done = ia_parse_option_bool(&arg, "LIFORECLAIM", &globals.liforeclaim);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "COALESCE", &globals.coalesce);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "EXCLUSIVE", &globals.exclusive);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "PAGEPERTURB", &globals.pageperturb);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "NOMEMINIT", &globals.nomeminit);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "NORDAHEAD", &globals.nordahead);
+    if (!done)
+      done = ia_parse_option_bool(&arg, "NOMETASYNC", &globals.nometasync);
+  }
+
+  if (done == 1)
+    return 0;
+  ia_log("%s: invalid option or value `%s`", "mdbx", arg);
+  return done ? done : -1;
+}
+
+static int peek_option_bool(int dflt, int opt, int8_t from) {
+  switch (from) {
+  default:
+    ia_log("error: invalid bool-option value %d", from);
+    ia_fatal(__func__);
+    /* fall through */
+  case ia_opt_bool_default:
+    return dflt;
+  case ia_opt_bool_off:
+    return dflt & ~opt;
+  case ia_opt_bool_on:
+    return dflt | opt;
+  }
+}
+
 struct iacontext {
   MDBX_txn *txn;
   MDBX_cursor *cursor;
@@ -73,14 +138,28 @@ static int ia_mdbx_open(const char *datadir) {
 
   switch (ioarena.conf.walmode) {
   case IA_WAL_INDEF:
+    break;
   case IA_WAL_OFF:
+    modeflags &= ~MDBX_NOMETASYNC;
     break;
   case IA_WAL_ON:
+    modeflags |= MDBX_NOMETASYNC;
+    break;
   default:
     ia_log("error: %s(): unsupported walmode %s", __func__,
            ia_walmode2str(ioarena.conf.walmode));
     return -1;
   }
+
+  modeflags =
+      peek_option_bool(modeflags, MDBX_LIFORECLAIM, globals.liforeclaim);
+  modeflags = peek_option_bool(modeflags, MDBX_COALESCE, globals.coalesce);
+  modeflags = peek_option_bool(modeflags, MDBX_EXCLUSIVE, globals.exclusive);
+  modeflags =
+      peek_option_bool(modeflags, MDBX_PAGEPERTURB, globals.pageperturb);
+  modeflags = peek_option_bool(modeflags, MDBX_NOMEMINIT, globals.nomeminit);
+  modeflags = peek_option_bool(modeflags, MDBX_NORDAHEAD, globals.nordahead);
+  modeflags = peek_option_bool(modeflags, MDBX_NOMETASYNC, globals.nometasync);
 
   rc = mdbx_env_open(self->env, datadir, modeflags, 0644);
   if (rc != MDBX_SUCCESS)
@@ -340,6 +419,7 @@ iadriver ia_mdbx = {.name = "mdbx",
                     .priv = NULL,
                     .open = ia_mdbx_open,
                     .close = ia_mdbx_close,
+                    .option = ia_mdbx_option,
 
                     .thread_new = ia_mdbx_thread_new,
                     .thread_dispose = ia_mdbx_thread_dispose,

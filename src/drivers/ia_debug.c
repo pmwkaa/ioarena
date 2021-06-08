@@ -118,10 +118,20 @@ static int ia_debug_next(iacontext *ctx, iabenchmark step, iakv *kv) {
   return rc;
 }
 
+static int ia_debug_option(iacontext *ctx, const char *arg) {
+  iadriver *drv = ioarena.driver;
+  printf("%s.option(%s %p, %s)\n", drv->name, ctx ? "doer" : "global", ctx,
+         arg);
+  if (strcmp(arg, "--help") == 0)
+    ia_log("`%s` driver don't support any option(s) except '%s'", "debug", arg);
+  return 0;
+}
+
 iadriver ia_debug = {.name = "debug",
                      .priv = NULL,
                      .open = ia_debug_open,
                      .close = ia_debug_close,
+                     .option = ia_debug_option,
 
                      .thread_new = ia_debug_thread_new,
                      .thread_dispose = ia_debug_thread_dispose,

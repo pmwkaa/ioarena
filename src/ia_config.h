@@ -13,11 +13,17 @@ typedef struct iaconfig iaconfig;
 
 #include "ia_driver.h"
 
+struct iaoption {
+  const char *arg;
+  struct iaoption *next;
+};
+
 struct iaconfig {
   char *driver;
   iadriver *driver_if;
   char *path;
   char *benchmark;
+  struct iaoption *drv_opts;
   int benchmark_list[IA_MAX];
   int ksize;
   int vsize;
@@ -43,5 +49,10 @@ void ia_configfree(iaconfig *);
 
 const char *ia_syncmode2str(iasyncmode syncmode);
 const char *ia_walmode2str(iawalmode walmode);
+
+#define ia_opt_bool_default 0
+#define ia_opt_bool_off -1
+#define ia_opt_bool_on 1
+int ia_parse_option_bool(const char **parg, const char *opt, int8_t *target);
 
 #endif

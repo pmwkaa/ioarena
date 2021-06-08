@@ -33,6 +33,7 @@ usage: ioarena [hDBCpnkvmlrwic]
      choices: sophia, leveldb, rocksdb, wiredtiger, forestdb, lmdb, mdbx, sqlite3, iowow, dummy, unqlite
   -B <benchmarks>
      choices: set, get, delete, iterate, batch, crud
+  -o <driver option>                 (default: none)
   -m <sync_mode>                     (default: lazy)
      choices: sync, lazy, nosync
   -l <wal_mode>                      (default: indef)
