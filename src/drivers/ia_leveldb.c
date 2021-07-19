@@ -98,7 +98,7 @@ static iacontext *ia_leveldb_thread_new(void) {
   return ctx;
 }
 
-void ia_leveldb_thread_dispose(iacontext *ctx) {
+static void ia_leveldb_thread_dispose(iacontext *ctx) {
   if (ctx->result)
     free(ctx->result);
   if (ctx->it)

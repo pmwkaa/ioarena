@@ -132,7 +132,7 @@ static int ia_sqlite3_close(void) {
   return 0;
 }
 
-void ia_sqlite3_thread_dispose(iacontext *ctx) { free(ctx); }
+static void ia_sqlite3_thread_dispose(iacontext *ctx) { free(ctx); }
 
 static iacontext *ia_sqlite3_thread_new(void) {
   iacontext *ctx = calloc(1, sizeof(iacontext));

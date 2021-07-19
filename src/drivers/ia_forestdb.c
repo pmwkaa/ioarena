@@ -128,7 +128,7 @@ bailout:
   return NULL;
 }
 
-void ia_forestdb_thread_dispose(iacontext *ctx) {
+static void ia_forestdb_thread_dispose(iacontext *ctx) {
   if (ctx->result)
     fdb_free_block(ctx->result);
   if (ctx->it)

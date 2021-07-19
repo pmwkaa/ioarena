@@ -91,7 +91,7 @@ if (ENABLE_LMDB)
   include_directories(${LMDB_INCLUDE_DIRS})
 endif(ENABLE_LMDB)
 
-# LMDBx
+# MDBX
 option(ENABLE_MDBX "Enable MDBX" OFF)
 if (ENABLE_MDBX)
   include(BuildMDBX)

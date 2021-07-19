@@ -117,7 +117,7 @@ bailout:
   return NULL;
 }
 
-void ia_lmdb_thread_dispose(iacontext *ctx) {
+static void ia_lmdb_thread_dispose(iacontext *ctx) {
   if (ctx->cursor)
     mdb_cursor_close(ctx->cursor);
   if (ctx->txn)

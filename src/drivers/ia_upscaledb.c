@@ -9,8 +9,8 @@
 #include "ups/upscaledb.h"
 
 struct iaprivate {
-    ups_env_t *env;
-    ups_db_t *db;
+  ups_env_t *env;
+  ups_db_t *db;
 };
 
 struct iacontext {
@@ -84,7 +84,7 @@ static int ia_upscaledb_close(void) {
   return 0;
 }
 
-void ia_upscaledb_thread_dispose(iacontext *ctx) {
+static void ia_upscaledb_thread_dispose(iacontext *ctx) {
   if (ctx->cursor)
     ups_cursor_close(ctx->cursor);
   if (ctx->txn)
@@ -173,8 +173,8 @@ bailout:
 static int ia_upscaledb_next(iacontext *ctx, iabenchmark step, iakv *kv) {
   iaprivate *self = ioarena.driver->priv;
   ups_status_t st;
-  ups_key_t key = { 0 };
-  ups_record_t value = { 0 };
+  ups_key_t key = {0};
+  ups_record_t value = {0};
 
   if (kv) {
     key.size = kv->ksize;
@@ -234,15 +234,13 @@ bailout:
   return -1;
 }
 
-iadriver ia_upscaledb = {
-    .name = "upscaledb",
-    .priv = NULL,
-    .open = ia_upscaledb_open,
-    .close = ia_upscaledb_close,
+iadriver ia_upscaledb = {.name = "upscaledb",
+                         .priv = NULL,
+                         .open = ia_upscaledb_open,
+                         .close = ia_upscaledb_close,
 
-    .thread_new = ia_upscaledb_thread_new,
-    .thread_dispose = ia_upscaledb_thread_dispose,
-    .begin = ia_upscaledb_begin,
-    .next = ia_upscaledb_next,
-    .done = ia_upscaledb_done
-};
+                         .thread_new = ia_upscaledb_thread_new,
+                         .thread_dispose = ia_upscaledb_thread_dispose,
+                         .begin = ia_upscaledb_begin,
+                         .next = ia_upscaledb_next,
+                         .done = ia_upscaledb_done};

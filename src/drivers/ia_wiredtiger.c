@@ -117,7 +117,7 @@ static int ia_wt_close(void) {
   return 0;
 }
 
-void ia_wiredtiger_thread_dispose(iacontext *ctx) {
+static void ia_wiredtiger_thread_dispose(iacontext *ctx) {
   if (ctx->cursor)
     ctx->cursor->close(ctx->cursor);
   if (ctx->session) {

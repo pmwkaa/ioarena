@@ -115,7 +115,7 @@ static iacontext *ia_vedisdb_thread_new(void) {
   return ctx;
 }
 
-void ia_vedisdb_thread_dispose(iacontext *ctx) { free(ctx); }
+static void ia_vedisdb_thread_dispose(iacontext *ctx) { free(ctx); }
 
 static int ia_vedisdb_begin(iacontext *ctx, iabenchmark step) {
   (void)ctx;

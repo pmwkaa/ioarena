@@ -79,7 +79,7 @@ static int ia_iowow_close(void) {
 
 static iacontext *ia_iowow_thread_new() { return calloc(1, sizeof(iacontext)); }
 
-void ia_iowow_thread_dispose(iacontext *ctx) { free(ctx); }
+static void ia_iowow_thread_dispose(iacontext *ctx) { free(ctx); }
 
 static int ia_iowow_begin(iacontext *ctx, iabenchmark step) {
   iwrc rc = 0;

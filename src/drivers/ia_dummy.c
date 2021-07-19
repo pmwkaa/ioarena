@@ -34,7 +34,7 @@ static iacontext *ia_dummy_thread_new() {
   return ctx;
 }
 
-void ia_dummy_thread_dispose(iacontext *ctx) { free(ctx); }
+static void ia_dummy_thread_dispose(iacontext *ctx) { free(ctx); }
 
 static int ia_dummy_begin(iacontext *ctx, iabenchmark step) {
   int rc;
@@ -106,10 +106,20 @@ static int ia_dummy_next(iacontext *ctx, iabenchmark step, iakv *kv) {
   return rc;
 }
 
+static int ia_dummy_option(iacontext *ctx, const char *arg) {
+  iadriver *drv = ioarena.driver;
+  printf("%s.option(%s %p, %s)\n", drv->name, ctx ? "doer" : "global", ctx,
+         arg);
+  if (strcmp(arg, "--help") == 0)
+    ia_log("`%s` driver don't support any option(s) except '%s'", "dummy", arg);
+  return 0;
+}
+
 iadriver ia_dummy = {.name = "dummy",
                      .priv = NULL,
                      .open = ia_dummy_open,
                      .close = ia_dummy_close,
+                     .option = ia_dummy_option,
 
                      .thread_new = ia_dummy_thread_new,
                      .thread_dispose = ia_dummy_thread_dispose,

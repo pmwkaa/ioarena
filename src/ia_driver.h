@@ -28,6 +28,7 @@ struct iadriver {
   int (*begin)(iacontext *, iabenchmark);
   int (*next)(iacontext *, iabenchmark, iakv *kv);
   int (*done)(iacontext *, iabenchmark);
+  int (*option)(iacontext *, const char *arg);
 };
 
 #endif

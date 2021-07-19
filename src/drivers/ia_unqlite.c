@@ -9,11 +9,11 @@
 #include "unqlite.h"
 
 struct iaprivate {
-    unqlite *db;
+  unqlite *db;
 };
 
 struct iacontext {
-    unqlite_kv_cursor *cursor;
+  unqlite_kv_cursor *cursor;
 };
 
 static int ia_unqlite_open(const char *datadir) {
@@ -62,7 +62,7 @@ static int ia_unqlite_close(void) {
   return 0;
 }
 
-void ia_unqlite_thread_dispose(iacontext *ctx) {
+static void ia_unqlite_thread_dispose(iacontext *ctx) {
   iaprivate *self = ioarena.driver->priv;
   if (ctx->cursor)
     unqlite_kv_cursor_release(self->db, ctx->cursor);
@@ -208,15 +208,13 @@ bailout:
   return -1;
 }
 
-iadriver ia_unqlite = {
-    .name = "unqlite",
-    .priv = NULL,
-    .open = ia_unqlite_open,
-    .close = ia_unqlite_close,
+iadriver ia_unqlite = {.name = "unqlite",
+                       .priv = NULL,
+                       .open = ia_unqlite_open,
+                       .close = ia_unqlite_close,
 
-    .thread_new = ia_unqlite_thread_new,
-    .thread_dispose = ia_unqlite_thread_dispose,
-    .begin = ia_unqlite_begin,
-    .next = ia_unqlite_next,
-    .done = ia_unqlite_done
-};
+                       .thread_new = ia_unqlite_thread_new,
+                       .thread_dispose = ia_unqlite_thread_dispose,
+                       .begin = ia_unqlite_begin,
+                       .next = ia_unqlite_next,
+                       .done = ia_unqlite_done};

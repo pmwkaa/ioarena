@@ -1,5 +1,4 @@
-﻿
-/*
+﻿/*
  * ioarena: embedded storage benchmarking
  *
  * Copyright (c) Dmitry Simonenko
@@ -12,6 +11,7 @@
 int ia_configinit(iaconfig *c) {
   c->driver = NULL;
   c->driver_if = NULL;
+  c->drv_opts = NULL;
   c->path = strdup("./_ioarena");
   if (c->path == NULL)
     return -1;
@@ -37,6 +37,11 @@ int ia_configinit(iaconfig *c) {
   c->walmode = IA_WAL_INDEF;
   c->continuous_completing = 0;
   c->nrepeat = 1;
+
+  c->kvseed = 42;
+  c->binary = 0;
+  c->separate = 0;
+  c->ignore_keynotfound = 0;
   return 0;
 }
 
@@ -98,6 +103,11 @@ static inline void ia_configusage(iaconfig *c) {
   ia_log("  -l <wal_mode>                      (default: %s)",
          ia_walmode2str(c->walmode));
   ia_log("     choices: indef, walon, waloff");
+  if (c->driver_if) {
+    if (c->driver_if->option)
+      c->driver_if->option(NULL, "--help");
+  } else
+    ia_log("  -o <database_option>");
   ia_log("  -C <name-prefix> generate csv      (default: %s)", c->csv_prefix);
   ia_log("  -p <path> for temporaries          (default: %s)", c->path);
   ia_log("  -n <number_of_operations>          (default: %ju)", c->count);
@@ -119,7 +129,8 @@ static inline void ia_configusage(iaconfig *c) {
 
 int ia_configparse(iaconfig *c, int argc, char **argv) {
   int opt;
-  while ((opt = getopt(argc, argv, "hD:T:B:p:n:k:v:C:m:l:r:w:ic")) != -1) {
+  struct iaoption **drv_opt /* the tail of single-linked list */ = &c->drv_opts;
+  while ((opt = getopt(argc, argv, "hD:T:B:p:n:k:v:C:m:l:r:w:ico:")) != -1) {
     switch (opt) {
     case 'D':
       if (c->driver)
@@ -127,6 +138,20 @@ int ia_configparse(iaconfig *c, int argc, char **argv) {
       c->driver = strdup(optarg);
       if (c->driver == NULL)
         return -1;
+      c->driver_if = ia_get_driver_for(c->driver);
+      if (c->driver_if == NULL) {
+        ia_log("error: unknown database driver '%s'", c->driver);
+        return -1;
+      }
+      break;
+    case 'o':
+      *drv_opt = calloc(1, sizeof(struct iaoption));
+      if (!*drv_opt)
+        return -1;
+      (*drv_opt)->arg = strdup(optarg);
+      if (!(*drv_opt)->arg)
+        return -1;
+      drv_opt = &(*drv_opt)->next;
       break;
     case 'T':
     case 'B':
@@ -199,9 +224,8 @@ int ia_configparse(iaconfig *c, int argc, char **argv) {
     ia_configusage(c);
     return -1;
   }
-  c->driver_if = ia_get_driver_for(c->driver);
-  if (c->driver_if == NULL) {
-    ia_log("error: unknown database driver '%s'", c->driver);
+  if (c->drv_opts && !c->driver_if->option) {
+    ia_log("error: database driver '%s' don't support option(s)", c->driver);
     return -1;
   }
   if (c->ksize <= 0) {
@@ -229,6 +253,12 @@ void ia_configfree(iaconfig *c) {
     free(c->driver);
   if (c->benchmark)
     free(c->benchmark);
+  for (struct iaoption *drv_opt = c->drv_opts; drv_opt;) {
+    void *tmp = drv_opt;
+    free((void *)drv_opt->arg);
+    drv_opt = drv_opt->next;
+    free(tmp);
+  }
 }
 
 void ia_configprint(iaconfig *c) {
@@ -238,6 +268,8 @@ void ia_configprint(iaconfig *c) {
   ia_log("  benchmark    = %s", c->benchmark);
   ia_log("  durability   = %s", ia_syncmode2str(c->syncmode));
   ia_log("  wal          = %s", ia_walmode2str(c->walmode));
+  for (struct iaoption *drv_opt = c->drv_opts; drv_opt; drv_opt = drv_opt->next)
+    ia_log("          option %s", drv_opt->arg);
   ia_log("  operations   = %ju", c->count);
   ia_log("  key size     = %d", c->ksize);
   ia_log("  value size   = %d", c->vsize);
@@ -246,7 +278,8 @@ void ia_configprint(iaconfig *c) {
     ia_log("  r-threads    = %d", c->rthr);
   if (c->wthr)
     ia_log("  w-threads    = %d", c->wthr);
-  ia_log("  batch length = %d", c->batch_length);
+  if (ia_benchmark(c->benchmark) == IA_BATCH || c->benchmark_list[IA_BATCH])
+    ia_log("  batch length = %d", c->batch_length);
   ia_log("  continuous   = %s\n", c->continuous_completing ? "yes" : "no");
 }
 
@@ -284,4 +317,35 @@ iabenchmark ia_benchmark(const char *name) {
   else if (strcasecmp(name, "crud") == 0 || strcasecmp(name, "transact") == 0)
     return IA_CRUD;
   return IA_MAX;
+}
+
+static int partmatch(const char *part, size_t part_len, const char *item) {
+  return part_len == strlen(item) && strncasecmp(part, item, part_len) == 0;
+}
+
+int ia_parse_option_bool(const char **parg, const char *opt, int8_t *target) {
+  const size_t name_len = strlen(opt);
+  if (strncasecmp(*parg, opt, name_len) != 0 || (*parg)[name_len] != '=')
+    return 0 /* don't match */;
+
+  const char *const value = *parg + name_len + 1;
+  const char *const comma = strchr(value, ',');
+  const size_t value_len = comma ? (size_t)(comma - value) : strlen(value);
+
+  if (partmatch(value, value_len, "ON") || partmatch(value, value_len, "YES") ||
+      partmatch(value, value_len, "TRUE") || partmatch(value, value_len, "1"))
+    *target = ia_opt_bool_on;
+  else if (partmatch(value, value_len, "OFF") ||
+           partmatch(value, value_len, "NO") ||
+           partmatch(value, value_len, "FALSE") ||
+           partmatch(value, value_len, "0"))
+    *target = ia_opt_bool_off;
+  else
+    return -1 /* invalid value */;
+
+  if (!comma)
+    return 1 /* done */;
+
+  *parg = comma + 1 /* seek after the comma */;
+  return **parg == '\0' /* continue if not at the end */;
 }

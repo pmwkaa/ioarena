@@ -1,4 +1,3 @@
-﻿
 /*
  * ioarena: embedded storage benchmarking
  *
@@ -116,7 +115,7 @@ static iacontext *ia_sophia_thread_new(void) {
   return ctx;
 }
 
-void ia_sophia_thread_dispose(iacontext *ctx) {
+static void ia_sophia_thread_dispose(iacontext *ctx) {
   if (ctx->cursor)
     sp_destroy(ctx->cursor);
   if (ctx->txn)
