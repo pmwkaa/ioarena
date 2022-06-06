@@ -67,10 +67,10 @@ int ia_kvgen_setup(char printable, unsigned ksize, unsigned nspaces,
   } else if (maxkey < BITMASK(48)) {
     width = 48 / 8;
     top = BITMASK(48);
-  } else if (maxkey < BITMASK(56)) {
+  } else if (maxkey < (double) BITMASK(56)) {
     width = 56 / 8;
     top = BITMASK(56);
-  } else if (maxkey < UINT64_MAX) {
+  } else if (maxkey < (double) UINT64_MAX) {
     width = 64 / 8;
     top = UINT64_MAX;
   } else {
