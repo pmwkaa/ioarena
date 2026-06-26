@@ -6,6 +6,7 @@
  */
 
 #include "ioarena.h"
+#include <iowow/iwlog.h>
 #include <iowow/iwkv.h>
 
 struct iaprivate {
