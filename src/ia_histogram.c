@@ -419,7 +419,7 @@ void ia_histogram_print(const iaconfig *config) {
     printf("----------------------------------------------------------\n");
 
     snpf_lat(line, sizeof(line), h->acc.latency_sum_ns);
-    printf("total:%16s  %16zu\n", line, n);
+    printf("total across all threads, latency:%8s, io_count:%8zu\n", line, n);
     snpf_lat(line, sizeof(line), h->whole_min);
     printf("min latency:%s/op\n", line);
     const ia_timestamp_t avg = h->acc.latency_sum_ns / h->acc.n;
@@ -435,7 +435,7 @@ void ia_histogram_print(const iaconfig *config) {
     const double wall = wall_ns / (double)S;
     const double rps = h->acc.n / wall;
     snpf_val(line, sizeof(line), rps, "");
-    printf(" throughput:%sops/s\n", line);
+    printf(" wall time: %8.3fs, throughput:%sops/s\n", wall, line);
 
     if (csv) {
       fprintf(csv, "\n%s,\t%s,\t%s,\t%s,\t%s\n", "ltn_min", "ltn_avg",
@@ -453,7 +453,7 @@ void ia_histogram_rusage(const iaconfig *config, const iarusage *start,
       "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> rusage\n");
   FILE *csv = csv_create(config, "rusage");
 
-  printf("iops: read %ld, write %ld, page %ld\n",
+  printf("io_ops: read %ld, write %ld, page %ld\n",
          fihish->iops_read - start->iops_read,
          fihish->iops_write - start->iops_write,
          fihish->iops_page - start->iops_page);
@@ -467,8 +467,8 @@ void ia_histogram_rusage(const iaconfig *config, const iarusage *start,
          (fihish->ram - start->ram) / mb);
 
   if (csv) {
-    fprintf(csv, "%s,\t%s,\t%s,\t%s,\t%s,\t%s,\t%s\n", "iops_read",
-            "iops_write", "iops_page", "cpu_user_ns", "cpu_kernel_ns", "disk",
+    fprintf(csv, "%s,\t%s,\t%s,\t%s,\t%s,\t%s,\t%s\n", "io_reads",
+            "io_writes", "io_pages", "cpu_user_ns", "cpu_kernel_ns", "disk",
             "ram");
     fprintf(csv, "%ju,\t%ju,\t%ju,\t%e,\t%e,\t%e,\t%e\n",
             fihish->iops_read - start->iops_read,

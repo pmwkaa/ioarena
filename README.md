@@ -41,8 +41,8 @@ usage: ioarena [hDBCpnkvmlrwic]
   -C <name-prefix> generate csv      (default: (null))
   -p <path> for temporaries          (default: ./_ioarena)
   -n <number_of_operations>          (default: 1000000)
-  -k <key_size>                      (default: 16)
-  -v <value_size>                    (default: 32)
+  -k <key_size>                      (default: 16 bytes)
+  -v <value_size>                    (default: 32 bytes)
   -c continuous completing mode      (default: no)
   -r <number_of_read_threads>        (default: 0)
      `zero` to use single main/common thread
