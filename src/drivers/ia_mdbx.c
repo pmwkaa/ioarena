@@ -153,7 +153,7 @@ static int ia_mdbx_open(const char *datadir) {
 
   modeflags =
       peek_option_bool(modeflags, MDBX_LIFORECLAIM, globals.liforeclaim);
-  modeflags = peek_option_bool(modeflags, MDBX_COALESCE, globals.coalesce);
+  //modeflags = peek_option_bool(modeflags, MDBX_COALESCE, globals.coalesce);
   modeflags = peek_option_bool(modeflags, MDBX_EXCLUSIVE, globals.exclusive);
   modeflags =
       peek_option_bool(modeflags, MDBX_PAGEPERTURB, globals.pageperturb);
