@@ -38,9 +38,13 @@ static int ia_iowow_open(const char *datadir) {
   }
   iaprivate *self = drv->priv;
   IWKV_OPTS opts = {.path = db_path};
+  if (!ioarena.conf.continuous_completing) {
+    opts.oflags = IWKV_TRUNC;
+  }
   switch (ioarena.conf.walmode) {
   case IA_WAL_ON:
     opts.wal.enabled = true;
+    opts.wal.no_crc = true;
     break;
   case IA_WAL_OFF:
     opts.wal.enabled = false;
